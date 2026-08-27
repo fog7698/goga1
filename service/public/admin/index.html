@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOKYO VPN — Админка</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Sora:wght@400;500;600;700&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Sora', system-ui, sans-serif; background: #0a0714; color: #f3f0fb; }
+  .display { font-family: 'Orbitron', sans-serif; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 22px 30px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  header .brand { display: flex; align-items: center; gap: 10px; font-family: 'Orbitron', sans-serif; font-weight: 800; }
+  main { max-width: 1200px; margin: 0 auto; padding: 26px 30px 60px; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; margin-bottom: 26px; }
+  .stat-card { padding: 20px; border-radius: 16px; background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)); border: 1px solid rgba(255,255,255,0.09); }
+  .stat-card span { font-size: 12.5px; color: #8a80ab; }
+  .stat-card b { display: block; font-family: 'Orbitron', sans-serif; font-size: 24px; margin-top: 8px; }
+  .banner { padding: 12px 18px; border-radius: 12px; background: rgba(255,111,145,0.12); border: 1px solid rgba(255,111,145,0.3); color: #ff9db3; font-size: 13px; margin-bottom: 20px; display: none; }
+  .panel { border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.09); margin-bottom: 22px; overflow: hidden; }
+  .panel-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .panel-head h3 { margin: 0; font-size: 14.5px; font-family: 'Orbitron', sans-serif; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 20px; font-size: 11px; text-transform: uppercase; color: #8a80ab; }
+  td { padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.06); color: #d6cfec; }
+  .badge { display: inline-flex; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .badge.active { background: rgba(78,232,155,0.14); color: #4ee89b; }
+  .badge.trial { background: rgba(63,216,255,0.14); color: #3fd8ff; }
+  .badge.expired, .badge.cancelled { background: rgba(255,111,145,0.14); color: #ff6f91; }
+  button.row-btn { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1px solid rgba(255,111,145,0.4); color: #ff9db3; background: transparent; cursor: pointer; }
+  .promo-form { display: flex; gap: 8px; padding: 14px 20px; flex-wrap: wrap; }
+  .promo-form input, .promo-form select { padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); color: #f3f0fb; font-size: 13px; }
+  .promo-form button { padding: 9px 16px; border-radius: 8px; border: none; background: #ff3b3b; color: #fff; font-weight: 700; cursor: pointer; }
+  .promo-code { font-family: monospace; color: #ffb3e8; }
+  .case-block { border-bottom: 1px solid rgba(255,255,255,0.07); padding: 16px 20px; }
+  .case-block:last-child { border-bottom: none; }
+  .case-block-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .case-block-head input[type=text] { padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); color: #f3f0fb; font-size: 13px; }
+  .case-block-head input[type=number] { width: 80px; padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); color: #f3f0fb; font-size: 13px; }
+  .case-block-head button { padding: 7px 14px; border-radius: 8px; border: none; background: #ff3b3b; color: #fff; font-weight: 700; font-size: 12px; cursor: pointer; }
+  .weight-bar { font-size: 11px; color: #8a80ab; margin-bottom: 8px; }
+  .item-row { display: grid; grid-template-columns: 1.6fr 0.8fr 0.7fr 0.7fr 0.6fr auto; gap: 8px; align-items: center; padding: 6px 0; }
+  .item-row input, .item-row select { padding: 7px 8px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.25); color: #f3f0fb; font-size: 12.5px; width: 100%; }
+  .item-row button { padding: 6px 10px; border-radius: 7px; border: 1px solid rgba(255,111,145,0.4); color: #ff9db3; background: transparent; font-size: 11.5px; cursor: pointer; }
+  .add-item-btn { margin-top: 8px; padding: 7px 12px; border-radius: 8px; border: 1px dashed rgba(255,255,255,0.25); background: transparent; color: #c6bfe0; font-size: 12px; cursor: pointer; }
+  .user-search { display: flex; gap: 8px; padding: 14px 20px; }
+  .user-search input { flex: 1; max-width: 320px; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); color: #f3f0fb; font-size: 13px; }
+  .user-search button { padding: 9px 16px; border-radius: 8px; border: none; background: #ff3b3b; color: #fff; font-weight: 700; cursor: pointer; }
+  .user-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .user-actions input[type=number] { width: 76px; padding: 6px 8px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); color: #f3f0fb; font-size: 12.5px; }
+  .user-actions button { padding: 6px 10px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.05); color: #d6cfec; font-size: 11.5px; cursor: pointer; white-space: nowrap; }
+  .user-hint { font-size: 11px; color: #8a80ab; padding: 0 20px 14px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">🗼 TOKYO VPN — Админка</div>
+  <button class="row-btn" id="logout-btn">Выйти</button>
+</header>
+<main>
+  <div class="banner" id="pay-banner">⚠ ЮKassa не подключена — добавьте YOOKASSA_SHOP_ID и YOOKASSA_SECRET_KEY в переменные окружения.</div>
+
+  <div class="stats">
+    <div class="stat-card"><span>Активные подписки</span><b id="s-active">…</b></div>
+    <div class="stat-card"><span>Доход за месяц</span><b id="s-revenue">…</b></div>
+    <div class="stat-card"><span>Новых сегодня</span><b id="s-new">…</b></div>
+    <div class="stat-card"><span>Промокодов применено</span><b id="s-promos">…</b></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Пользователи</h3></div>
+    <div class="user-search">
+      <input id="user-q" placeholder="ID пользователя или @username">
+      <button id="user-search-btn">Найти</button>
+    </div>
+    <div class="user-hint">Начисление монет: положительное число — начислить, отрицательное — списать. Баланс не уходит ниже нуля. «Выплатил» уменьшает баланс на указанную сумму — используйте после того, как реально отправили деньги через поддержку.</div>
+    <table>
+      <thead><tr><th>Пользователь</th><th>Монеты</th><th>Подписка</th><th>Рефералы (20%)</th><th>Медиа</th><th>Действия</th></tr></thead>
+      <tbody id="users-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Медиа-рефералы</h3>
+      <select id="media-filter">
+        <option value="pending" selected>На модерации</option>
+        <option value="approved">Одобрено</option>
+        <option value="rejected">Отклонено</option>
+        <option value="">Все</option>
+      </select>
+    </div>
+    <div class="user-hint">Просмотры вводятся вручную после проверки ролика/аккаунта — нет легального способа автоматически парсить Instagram/TikTok, а для YouTube не настроен API-ключ.</div>
+    <table>
+      <thead><tr><th>Пользователь</th><th>Площадка</th><th>Ссылка</th><th>Просмотры</th><th>Статус</th><th>Действия</th></tr></thead>
+      <tbody id="media-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Подписки</h3></div>
+    <table>
+      <thead><tr><th>Пользователь</th><th>Тариф</th><th>Статус</th><th>Окончание (UTC)</th><th>Действие</th></tr></thead>
+      <tbody id="subs-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Промокоды</h3></div>
+    <div class="promo-form">
+      <input id="pc-code" placeholder="КОД">
+      <select id="pc-kind"><option value="days">Бонусные дни</option><option value="percent">Скидка %</option></select>
+      <input id="pc-value" type="number" placeholder="Значение" style="width:110px">
+      <input id="pc-max" type="number" placeholder="Лимит использований (пусто = без лимита)" style="width:260px">
+      <button id="pc-create">+ Создать код</button>
+    </div>
+    <table>
+      <thead><tr><th>Код</th><th>Тип</th><th>Использован</th><th>Статус</th><th>Действие</th></tr></thead>
+      <tbody id="promo-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Кейсы</h3></div>
+    <div id="cases-body"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Платежи · ЮKassa</h3></div>
+    <table>
+      <thead><tr><th>Пользователь</th><th>Тариф</th><th>Сумма</th><th>Статус</th><th>Дата</th></tr></thead>
+      <tbody id="pay-body"></tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function loadOverview() {
+  const o = await api('/admin/api/overview');
+  document.getElementById('s-active').textContent = o.active;
+  document.getElementById('s-revenue').textContent = o.revenue + ' ₽';
+  document.getElementById('s-new').textContent = o.newToday;
+  document.getElementById('s-promos').textContent = o.promosUsed;
+  document.getElementById('pay-banner').style.display = o.paymentsConfigured ? 'none' : 'block';
+}
+
+const badgeClass = { active: 'active', trial: 'trial', expired: 'expired', cancelled: 'cancelled' };
+
+let lastUserQuery = '';
+
+async function loadUsers(query) {
+  lastUserQuery = query;
+  const body = document.getElementById('users-body');
+  if (!query) { body.innerHTML = ''; return; }
+  let rows;
+  try { rows = await api(`/admin/api/users?q=${encodeURIComponent(query)}`); }
+  catch { body.innerHTML = '<tr><td colspan="6">Ошибка поиска</td></tr>'; return; }
+
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="6">Никого не найдено</td></tr>'; return; }
+
+  body.innerHTML = rows.map((u) => `
+    <tr data-id="${u.id}">
+      <td>@${u.username || u.id} <span style="color:#8a80ab">#${u.id}</span></td>
+      <td>🪙 ${u.coins}</td>
+      <td>${u.subscription ? `${u.subscription.plan} · до ${u.subscription.expires_at}` : 'нет'}</td>
+      <td>${u.referral.balanceRub} ₽ <span style="color:#8a80ab">(${u.referral.payingReferrals} оплат.)</span></td>
+      <td>${u.media.totalViews.toLocaleString('ru-RU')} просм. · $${u.media.pendingPayoutUsd}</td>
+      <td>
+        <div class="user-actions">
+          <input type="number" class="u-coins-delta" placeholder="±монеты">
+          <button class="u-coins-apply">Монеты</button>
+          <input type="number" class="u-sub-days" placeholder="дней" min="1">
+          <button class="u-sub-grant">Подписка</button>
+          <input type="number" class="u-ref-payout" placeholder="₽ реф." min="1">
+          <button class="u-ref-apply">Выплатил реф.</button>
+          <input type="number" class="u-media-payout" placeholder="просмотров" min="1">
+          <button class="u-media-apply">Выплатил медиа</button>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  body.querySelectorAll('tr[data-id]').forEach((row) => {
+    const id = row.dataset.id;
+
+    row.querySelector('.u-coins-apply').addEventListener('click', async () => {
+      const delta = parseInt(row.querySelector('.u-coins-delta').value, 10);
+      if (!Number.isInteger(delta) || delta === 0) return alert('Укажите ненулевое число монет');
+      await api(`/admin/api/users/${id}/coins`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ delta }),
+      });
+      loadUsers(lastUserQuery);
+    });
+
+    row.querySelector('.u-sub-grant').addEventListener('click', async () => {
+      const days = parseInt(row.querySelector('.u-sub-days').value, 10);
+      if (!Number.isInteger(days) || days <= 0) return alert('Укажите количество дней (целое число больше нуля)');
+      await api(`/admin/api/users/${id}/subscription`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ days }),
+      });
+      loadUsers(lastUserQuery); loadSubs(); loadOverview();
+    });
+
+    row.querySelector('.u-ref-apply').addEventListener('click', async () => {
+      const amountRub = parseInt(row.querySelector('.u-ref-payout').value, 10);
+      if (!Number.isInteger(amountRub) || amountRub <= 0) return alert('Укажите сумму выплаты в рублях');
+      if (!confirm(`Подтвердите: вы уже отправили ${amountRub} ₽ этому пользователю через поддержку?`)) return;
+      await api(`/admin/api/users/${id}/referral-payout`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amountRub }),
+      });
+      loadUsers(lastUserQuery);
+    });
+
+    row.querySelector('.u-media-apply').addEventListener('click', async () => {
+      const views = parseInt(row.querySelector('.u-media-payout').value, 10);
+      if (!Number.isInteger(views) || views <= 0) return alert('Укажите количество просмотров, за которые выплатили');
+      if (!confirm(`Подтвердите: вы уже выплатили за ${views} просмотров этому пользователю через поддержку?`)) return;
+      await api(`/admin/api/users/${id}/media-payout`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ views }),
+      });
+      loadUsers(lastUserQuery);
+    });
+  });
+}
+
+document.getElementById('user-search-btn').addEventListener('click', () => loadUsers(document.getElementById('user-q').value.trim()));
+document.getElementById('user-q').addEventListener('keydown', (e) => { if (e.key === 'Enter') loadUsers(document.getElementById('user-q').value.trim()); });
+
+const MEDIA_PLATFORM_LABEL = { youtube: 'YouTube', instagram: 'Instagram', tiktok: 'TikTok' };
+const MEDIA_STATUS_BADGE = { approved: 'active', pending: 'trial', rejected: 'expired' };
+
+async function loadMedia() {
+  const status = document.getElementById('media-filter').value;
+  const rows = await api(`/admin/api/media${status ? '?status=' + encodeURIComponent(status) : ''}`);
+  const body = document.getElementById('media-body');
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="6">Пусто</td></tr>'; return; }
+
+  body.innerHTML = rows.map((r) => `
+    <tr data-id="${r.id}">
+      <td>@${r.username || r.user_id}</td>
+      <td>${MEDIA_PLATFORM_LABEL[r.platform] || r.platform}</td>
+      <td><a href="${r.url}" target="_blank" rel="noopener" style="color:#ffb3e8">открыть ↗</a></td>
+      <td><input type="number" class="m-views" value="${r.views}" style="width:100px;padding:6px 8px;border-radius:7px;border:1px solid rgba(255,255,255,0.14);background:rgba(0,0,0,0.3);color:#f3f0fb;"></td>
+      <td><span class="badge ${MEDIA_STATUS_BADGE[r.status] || ''}">${r.status}</span></td>
+      <td>
+        <button class="row-btn m-save-views">Сохр. просмотры</button>
+        <button class="row-btn m-approve">Одобрить</button>
+        <button class="row-btn m-reject">Отклонить</button>
+      </td>
+    </tr>`).join('');
+
+  body.querySelectorAll('tr[data-id]').forEach((row) => {
+    const id = row.dataset.id;
+    row.querySelector('.m-save-views').addEventListener('click', async () => {
+      const views = parseInt(row.querySelector('.m-views').value, 10);
+      if (!Number.isInteger(views) || views < 0) return alert('Некорректное число просмотров');
+      await api(`/admin/api/media/${id}/views`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ views }),
+      });
+      loadMedia();
+    });
+    row.querySelector('.m-approve').addEventListener('click', async () => {
+      await api(`/admin/api/media/${id}/status`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'approved' }),
+      });
+      loadMedia();
+    });
+    row.querySelector('.m-reject').addEventListener('click', async () => {
+      await api(`/admin/api/media/${id}/status`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'rejected' }),
+      });
+      loadMedia();
+    });
+  });
+}
+document.getElementById('media-filter').addEventListener('change', loadMedia);
+
+async function loadSubs() {
+  const rows = await api('/admin/api/subscriptions');
+  const body = document.getElementById('subs-body');
+  body.innerHTML = rows.map(r => `
+    <tr>
+      <td>@${r.username || r.user_id}</td>
+      <td>${r.plan}</td>
+      <td><span class="badge ${badgeClass[r.status] || ''}">${r.status}</span></td>
+      <td>${r.expires_at}</td>
+      <td>${r.status === 'active' ? `<button class="row-btn" data-id="${r.id}">Отключить</button>` : ''}</td>
+    </tr>`).join('');
+  body.querySelectorAll('button[data-id]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await api(`/admin/api/subscriptions/${btn.dataset.id}/disable`, { method: 'POST' });
+      loadSubs(); loadOverview();
+    });
+  });
+}
+
+async function loadPromos() {
+  const rows = await api('/admin/api/promo-codes');
+  const body = document.getElementById('promo-body');
+  body.innerHTML = rows.map(r => `
+    <tr>
+      <td class="promo-code">${r.code}</td>
+      <td>${r.kind === 'days' ? '+' + r.value + ' дн.' : r.value + '%'}</td>
+      <td>${r.used_count}${r.max_uses != null ? ' / ' + r.max_uses : ''}</td>
+      <td>${r.active ? 'активен' : 'выключен'}</td>
+      <td><button class="row-btn" data-code="${r.code}">${r.active ? 'Выключить' : 'Включить'}</button></td>
+    </tr>`).join('');
+  body.querySelectorAll('button[data-code]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await api(`/admin/api/promo-codes/${btn.dataset.code}/toggle`, { method: 'POST' });
+      loadPromos();
+    });
+  });
+}
+
+async function loadPayments() {
+  const rows = await api('/admin/api/payments');
+  document.getElementById('pay-body').innerHTML = rows.map(r => `
+    <tr><td>#${r.user_id}</td><td>${r.plan}</td><td>${r.amount} ₽</td><td>${r.status}</td><td>${r.created_at}</td></tr>
+  `).join('');
+}
+
+document.getElementById('pc-create').addEventListener('click', async () => {
+  const code = document.getElementById('pc-code').value.trim();
+  const kind = document.getElementById('pc-kind').value;
+  const value = parseInt(document.getElementById('pc-value').value, 10);
+  const maxRaw = document.getElementById('pc-max').value.trim();
+  if (!code || !Number.isInteger(value)) return alert('Заполните код и значение');
+  await api('/admin/api/promo-codes', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, kind, value, maxUses: maxRaw ? parseInt(maxRaw, 10) : null }),
+  });
+  document.getElementById('pc-code').value = '';
+  document.getElementById('pc-value').value = '';
+  document.getElementById('pc-max').value = '';
+  loadPromos();
+});
+
+const KIND_LABEL = { days: 'Дни подписки', percent: 'Скидка %', coins: 'Монеты' };
+
+async function loadCases() {
+  const caseTypes = await api('/admin/api/cases');
+  const body = document.getElementById('cases-body');
+  body.innerHTML = caseTypes.map((c) => {
+    const totalWeight = c.items.reduce((s, it) => s + it.weight, 0) || 1;
+    return `
+    <div class="case-block" data-key="${c.key}">
+      <div class="case-block-head">
+        <input type="text" class="ct-title" value="${c.title}" style="min-width:180px">
+        <label class="muted" style="font-size:11px;color:#8a80ab">Цена (монет)</label>
+        <input type="number" class="ct-cost" value="${c.cost_coins}">
+        <label style="font-size:11px;color:#8a80ab"><input type="checkbox" class="ct-active" ${c.active ? 'checked' : ''}> активен</label>
+        <button class="ct-save">Сохранить</button>
+      </div>
+      <div class="weight-bar">Шансы считаются от суммы весов (сейчас сумма = ${totalWeight})</div>
+      <div class="item-row" style="font-size:11px;color:#8a80ab;font-weight:700">
+        <div>Приз</div><div>Тип</div><div>Значение</div><div>Вес (%)</div><div>Актив</div><div></div>
+      </div>
+      <div class="items-list">
+        ${c.items.map((it) => `
+          <div class="item-row" data-id="${it.id}">
+            <input type="text" class="it-title" value="${it.title}">
+            <select class="it-kind">
+              ${Object.entries(KIND_LABEL).map(([k, l]) => `<option value="${k}" ${it.kind === k ? 'selected' : ''}>${l}</option>`).join('')}
+            </select>
+            <input type="number" class="it-value" value="${it.value}">
+            <input type="number" class="it-weight" value="${it.weight}">
+            <input type="checkbox" class="it-active" ${it.active ? 'checked' : ''}>
+            <div style="display:flex;gap:6px">
+              <button class="it-save">✓</button>
+              <button class="it-del">✕</button>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="item-row new-item-row">
+        <input type="text" class="ni-title" placeholder="Название приза">
+        <select class="ni-kind">${Object.entries(KIND_LABEL).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select>
+        <input type="number" class="ni-value" placeholder="0">
+        <input type="number" class="ni-weight" placeholder="10" value="10">
+        <div></div>
+        <button class="ni-add">+ Добавить</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  body.querySelectorAll('.case-block').forEach((block) => {
+    const key = block.dataset.key;
+
+    block.querySelector('.ct-save').addEventListener('click', async () => {
+      await api(`/admin/api/cases/${key}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: block.querySelector('.ct-title').value,
+          costCoins: parseInt(block.querySelector('.ct-cost').value, 10),
+          active: block.querySelector('.ct-active').checked,
+        }),
+      });
+      loadCases();
+    });
+
+    block.querySelectorAll('.item-row[data-id]').forEach((row) => {
+      const id = row.dataset.id;
+      row.querySelector('.it-save').addEventListener('click', async () => {
+        await api(`/admin/api/cases/items/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: row.querySelector('.it-title').value,
+            kind: row.querySelector('.it-kind').value,
+            value: parseInt(row.querySelector('.it-value').value, 10),
+            weight: parseInt(row.querySelector('.it-weight').value, 10),
+            active: row.querySelector('.it-active').checked,
+          }),
+        });
+        loadCases();
+      });
+      row.querySelector('.it-del').addEventListener('click', async () => {
+        if (!confirm('Удалить приз?')) return;
+        await api(`/admin/api/cases/items/${id}`, { method: 'DELETE' });
+        loadCases();
+      });
+    });
+
+    block.querySelector('.ni-add').addEventListener('click', async () => {
+      const title = block.querySelector('.ni-title').value.trim();
+      const value = parseInt(block.querySelector('.ni-value').value, 10);
+      const weight = parseInt(block.querySelector('.ni-weight').value, 10);
+      if (!title || !Number.isInteger(value) || !Number.isInteger(weight)) return alert('Заполните все поля приза');
+      await api(`/admin/api/cases/${key}/items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, kind: block.querySelector('.ni-kind').value, value, weight }),
+      });
+      loadCases();
+    });
+  });
+}
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await api('/admin/logout', { method: 'POST' });
+  location.href = '/admin/login';
+});
+
+loadOverview(); loadSubs(); loadPromos(); loadPayments(); loadCases(); loadMedia();
+setInterval(() => { loadOverview(); loadSubs(); }, 30000);
+</script>
+</body>
+</html>

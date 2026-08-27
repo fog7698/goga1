@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOKYO VPN — Вход в админку</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Sora:wght@400;500;600;700&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: 'Sora', system-ui, sans-serif;
+    background: #0a0714; color: #f3f0fb;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .card {
+    width: 100%; max-width: 340px; padding: 28px 26px; border-radius: 18px;
+    background: linear-gradient(165deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  h1 { margin: 0 0 4px; font-family: 'Orbitron', sans-serif; font-size: 17px; }
+  p { margin: 0 0 20px; color: #a89bcf; font-size: 12.5px; }
+  input {
+    width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.3); color: #f3f0fb; font-size: 14px; margin-bottom: 12px;
+  }
+  button {
+    width: 100%; padding: 12px; border-radius: 10px; border: none; cursor: pointer;
+    background: #ff3b3b; color: #fff; font-weight: 700; font-size: 14px;
+  }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .error { color: #ff9db3; font-size: 12.5px; margin: -4px 0 12px; display: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🗼 TOKYO VPN</h1>
+  <p>Вход в админ-панель</p>
+  <form id="login-form">
+    <input type="password" id="password" placeholder="Пароль" autofocus>
+    <div class="error" id="error">Неверный пароль</div>
+    <button type="submit" id="submit-btn">Войти</button>
+  </form>
+</div>
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  const errEl = document.getElementById('error');
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  try {
+    const res = await fetch('/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: document.getElementById('password').value }),
+    });
+    if (!res.ok) { errEl.style.display = 'block'; btn.disabled = false; return; }
+    location.href = '/admin/';
+  } catch {
+    errEl.textContent = 'Ошибка соединения, попробуйте ещё раз.';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TOKYO VPN 🗼 — интернет без границ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Sora:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Sora', system-ui, sans-serif; background: #0a0714; color: #f3f0fb; overflow-x: hidden; }
+  .jp { font-family: 'Noto Sans JP', sans-serif; }
+  a { color: #ff6fd8; text-decoration: none; }
+  a:hover { color: #ffa3ea; }
+  .bg-grid { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,111,216,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,111,216,0.05) 1px, transparent 1px); background-size: 64px 64px; mask-image: linear-gradient(to bottom, black, transparent 85%); pointer-events: none; z-index: 0; }
+  .orb { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.5; pointer-events: none; z-index: 0; }
+  .orb-1 { width: 520px; height: 520px; top: -160px; left: -120px; background: radial-gradient(circle, #ff2fb0, transparent 70%); }
+  .orb-2 { width: 460px; height: 460px; top: 200px; right: -140px; background: radial-gradient(circle, #3fd8ff, transparent 70%); }
+  .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 26px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark { width: 38px; height: 38px; border-radius: 11px; background: #ff3b3b; display: flex; align-items: center; justify-content: center; font-size: 19px; }
+  .brand-name { font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 18px; }
+  .nav-cta { padding: 10px 20px; border-radius: 999px; font-weight: 700; font-size: 13.5px; background: #ff3b3b; color: #fff; }
+  .kicker { display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 999px; background: rgba(255,111,216,0.1); border: 1px solid rgba(255,111,216,0.35); font-size: 13px; color: #ffb3e8; margin-bottom: 24px; }
+  .hero { padding: 50px 0 40px; text-align: center; }
+  .hero h1 { font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 52px; line-height: 1.1; margin: 0 0 20px; background: linear-gradient(135deg, #ffffff 20%, #ffc9f2 55%, #b78cff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p.sub { font-size: 17px; color: #c6bfe0; max-width: 580px; margin: 0 auto 34px; }
+  .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+  .btn { padding: 15px 26px; border-radius: 999px; font-weight: 700; font-size: 14.5px; display: inline-flex; align-items: center; gap: 9px; }
+  .btn-primary { background: #ff3b3b; color: #fff; box-shadow: 0 10px 30px rgba(255,59,59,0.4); }
+  .btn-secondary { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16); color: #f3f0fb; }
+  .stat-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .stat-chip { display: flex; align-items: center; gap: 9px; padding: 11px 18px; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-size: 13.5px; }
+  .stat-chip b { color: #ff9ee4; font-family: 'Orbitron', sans-serif; }
+  .section-title { text-align: center; margin: 90px 0 40px; }
+  .section-title .jp { display: block; font-size: 12.5px; color: #a892d8; letter-spacing: 3px; margin-bottom: 8px; }
+  .section-title h2 { font-family: 'Orbitron', sans-serif; font-size: 30px; margin: 0; }
+  .pricing { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
+  .plan { position: relative; padding: 30px 24px; border-radius: 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); display: flex; flex-direction: column; gap: 16px; }
+  .plan.featured { background: rgba(255,59,59,0.14); border-color: rgba(255,59,59,0.55); }
+  .plan-badge { position: absolute; top: -12px; right: 22px; background: #ff3b3b; color: #fff; font-size: 11.5px; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
+  .plan-name { font-size: 13px; color: #c6bfe0; text-transform: uppercase; letter-spacing: 1.4px; }
+  .plan-price { font-family: 'Orbitron', sans-serif; font-size: 36px; font-weight: 800; }
+  .plan-btn { text-align: center; padding: 12px; border-radius: 999px; background: rgba(255,255,255,0.08); font-weight: 700; font-size: 13.5px; color: #fff; border: 1px solid rgba(255,255,255,0.14); }
+  .plan.featured .plan-btn { background: #ff3b3b; border: none; }
+  .trial-banner { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding: 22px 30px; border-radius: 20px; margin-bottom: 34px; background: rgba(255,59,59,0.14); border: 1px solid rgba(255,59,59,0.35); }
+  .promo-box { max-width: 480px; margin: 40px auto 0; padding: 24px; border-radius: 18px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+  .promo-row { display: flex; gap: 10px; padding: 6px; border-radius: 14px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); margin-top: 14px; }
+  .promo-row input { flex: 1; background: transparent; border: none; color: #f3f0fb; font-size: 14px; padding: 11px 14px; outline: none; }
+  .promo-row button { padding: 11px 18px; border-radius: 10px; border: none; background: #ff3b3b; color: #fff; font-weight: 700; font-size: 13px; }
+  #promo-result { margin-top: 10px; font-size: 13px; min-height: 18px; }
+  .support-fab { position: fixed; right: 28px; bottom: max(28px, env(safe-area-inset-bottom)); z-index: 5; display: flex; align-items: center; gap: 9px; padding: 13px 20px; border-radius: 999px; background: #ff3b3b; color: #fff; font-weight: 700; font-size: 13.5px; box-shadow: 0 14px 36px rgba(255,59,59,0.5); }
+  .footer { border-top: 1px solid rgba(255,255,255,0.08); margin-top: 90px; padding: 34px 0 50px; text-align: center; font-size: 12.5px; color: #7a70a0; }
+  .cases-preview { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
+  .case-tile { padding: 26px 20px; border-radius: 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); text-align: center; }
+  .case-tile .emoji { font-size: 38px; margin-bottom: 10px; }
+  .case-tile .cost { color: #ffd27a; font-weight: 700; font-size: 13px; margin: 6px 0 16px; }
+  .coin-note { text-align: center; color: #c6bfe0; font-size: 13.5px; max-width: 520px; margin: -18px auto 30px; }
+
+  @media (max-width: 860px) {
+    .hero h1 { font-size: 38px; }
+    .pricing, .cases-preview { grid-template-columns: 1fr; }
+    .stat-row { flex-direction: column; align-items: stretch; }
+  }
+  @media (max-width: 520px) {
+    .wrap { padding: 0 16px; }
+    .nav { padding: 18px 0; }
+    .brand-name { font-size: 15px; }
+    .nav-cta { padding: 8px 14px; font-size: 12px; }
+    .hero { padding: 30px 0 24px; }
+    .hero h1 { font-size: 30px; }
+    .hero p.sub { font-size: 14.5px; }
+    .hero-ctas { flex-direction: column; align-items: stretch; }
+    .btn { justify-content: center; }
+    .section-title { margin: 56px 0 26px; }
+    .section-title h2 { font-size: 24px; }
+    .trial-banner { flex-direction: column; align-items: stretch; text-align: center; padding: 20px; }
+    .support-fab { right: 14px; bottom: 14px; padding: 11px 16px; font-size: 12.5px; }
+    .promo-row { flex-direction: column; }
+    .promo-row button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="wrap">
+  <nav class="nav">
+    <div class="brand"><div class="brand-mark">🗼</div><div class="brand-name">TOKYO VPN</div></div>
+    <a class="nav-cta" id="tg-cta-nav" href="#" target="_blank">Открыть в Telegram</a>
+  </nav>
+
+  <section class="hero">
+    <div class="kicker"><span class="jp">見えない接続</span> · невидимое соединение</div>
+    <h1>Интернет без границ.<br>Даже в России.</h1>
+    <p class="sub">TOKYO VPN шифрует трафик протоколом VLESS поверх настоящего HTTPS — он неотличим от обычного сайта, даже для глубокой проверки пакетов операторов.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" id="tg-cta-1" href="#" target="_blank">🎁 Попробовать 3 дня бесплатно</a>
+      <a class="btn btn-secondary" id="tg-cta-2" href="#" target="_blank">Открыть бота в Telegram</a>
+    </div>
+    <div class="stat-row">
+      <div class="stat-chip"><b id="stat-countries">…</b>&nbsp;локаций в белых списках</div>
+      <div class="stat-chip"><b>LTE</b>&nbsp;обход блокировок операторов</div>
+      <div class="stat-chip"><b>24/7</b>&nbsp;поддержка</div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="section-title"><span class="jp">料金プラン</span><h2>Тарифы</h2></div>
+    <div class="trial-banner">
+      <div><b style="font-family:'Orbitron',sans-serif;">🗼 3 дня бесплатно</b><p style="margin:6px 0 0;color:#d6cfec;font-size:13.5px;">Без карты и обязательств — активируется прямо в боте.</p></div>
+      <a class="btn btn-secondary" id="tg-cta-3" href="#" target="_blank">Активировать в боте</a>
+    </div>
+    <div class="pricing" id="pricing-grid">
+      <div class="plan"><div class="plan-name">1 месяц</div><div class="plan-price">…</div><a class="plan-btn" id="tg-cta-4" href="#" target="_blank">Выбрать в боте</a></div>
+      <div class="plan featured"><div class="plan-badge">Выгода 29%</div><div class="plan-name">6 месяцев</div><div class="plan-price">…</div><a class="plan-btn" id="tg-cta-5" href="#" target="_blank">Выбрать в боте</a></div>
+      <div class="plan"><div class="plan-name">12 месяцев</div><div class="plan-price">…</div><a class="plan-btn" id="tg-cta-6" href="#" target="_blank">Выбрать в боте</a></div>
+    </div>
+  </section>
+
+  <section id="cases">
+    <div class="section-title"><span class="jp">ケース</span><h2>Кейсы</h2></div>
+    <p class="coin-note">За каждую покупку подписки — монеты: 1 месяц = 🪙1, 6 месяцев = 🪙6, 12 месяцев = 🪙12. Открывайте кейсы в мини-приложении бота и получайте бонусные дни, скидки и монеты обратно.</p>
+    <div class="cases-preview">
+      <div class="case-tile"><div class="emoji">🎁</div><div class="plan-name">Кейс</div><div class="cost">🪙 1 монета</div><a class="btn btn-secondary" id="tg-cta-case1" href="#" target="_blank">Открыть в боте</a></div>
+      <div class="case-tile"><div class="emoji">🎁</div><div class="plan-name">Кейс</div><div class="cost">🪙 6 монет</div><a class="btn btn-secondary" id="tg-cta-case6" href="#" target="_blank">Открыть в боте</a></div>
+      <div class="case-tile"><div class="emoji">🎁</div><div class="plan-name">Кейс</div><div class="cost">🪙 12 монет</div><a class="btn btn-secondary" id="tg-cta-case12" href="#" target="_blank">Открыть в боте</a></div>
+    </div>
+  </section>
+
+  <section class="promo-box">
+    <b class="jp" style="display:block;font-size:12px;color:#a892d8;letter-spacing:2px;margin-bottom:8px;">プロモコード</b>
+    <b>Есть промокод?</b>
+    <div class="promo-row"><input id="promo-input" type="text" placeholder="Введите промокод"><button id="promo-btn">Проверить</button></div>
+    <div id="promo-result"></div>
+  </section>
+
+  <div class="footer">
+    © TOKYO VPN — 🗼 быстрый и незаметный доступ без границ · Оплата через ЮKassa · Поддержка: <span id="support-contact">…</span>
+  </div>
+</div>
+
+<a class="support-fab" id="tg-cta-support" href="#" target="_blank">🆘 Поддержка</a>
+
+<script>
+fetch('/api/status').then(r => r.json()).then(s => {
+  document.getElementById('stat-countries').textContent = s.countries + '+';
+  document.getElementById('support-contact').textContent = s.supportContact;
+  const grid = document.getElementById('pricing-grid');
+  const prices = [s.plans['1m'], s.plans['6m'], s.plans['12m']];
+  grid.querySelectorAll('.plan-price').forEach((el, i) => { el.textContent = prices[i].price + ' ₽'; });
+
+  const tgLink = s.botUsername ? ('https://t.me/' + s.botUsername) : null;
+  const casesLink = s.botUsername ? ('https://t.me/' + s.botUsername + '?start=cases') : null;
+  document.querySelectorAll('[id^="tg-cta"]').forEach(el => {
+    const link = el.id.startsWith('tg-cta-case') ? casesLink : tgLink;
+    if (link) { el.href = link; }
+    else { el.href = '#'; el.title = 'Бот скоро будет подключен'; el.addEventListener('click', e => e.preventDefault()); }
+  });
+});
+
+document.getElementById('promo-btn').addEventListener('click', async () => {
+  const code = document.getElementById('promo-input').value.trim();
+  const out = document.getElementById('promo-result');
+  if (!code) return;
+  out.textContent = 'Проверяем…';
+  const res = await fetch('/api/promo/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+  const data = await res.json();
+  if (!data.valid) { out.style.color = '#ff9db3'; out.textContent = 'Промокод не найден или уже неактивен.'; return; }
+  out.style.color = '#4ee89b';
+  out.textContent = data.kind === 'percent' ? ('Код действителен: скидка ' + data.value + '%. Активируйте его в боте.') : ('Код действителен: +' + data.value + ' дней. Активируйте его в боте.');
+});
+</script>
+</body>
+</html>

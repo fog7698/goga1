@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>TOKYO VPN — Личный кабинет</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Sora:wght@400;500;600;700&display=swap">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: 'Sora', system-ui, sans-serif;
+    background: var(--tg-theme-bg-color, #0a0714);
+    color: var(--tg-theme-text-color, #f3f0fb);
+    padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  }
+  .display { font-family: 'Orbitron', sans-serif; }
+  .wrap { max-width: 520px; margin: 0 auto; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 18px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 14px; }
+  .tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 8px; border-radius: 10px; font-size: 13.5px; font-weight: 700; color: #b3a9d4; cursor: pointer; }
+  .tab.active { background: #ff3b3b; color: #fff; }
+  .card { border-radius: 18px; background: rgba(255,255,255,0.045); border: 1px solid rgba(255,255,255,0.1); padding: 20px; margin-bottom: 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 15px; font-family: 'Orbitron', sans-serif; }
+  .muted { color: #a89bcf; font-size: 12.5px; }
+  .expiry { font-size: 22px; font-weight: 800; font-family: 'Orbitron', sans-serif; margin: 10px 0 2px; }
+  .coins-row { display: flex; align-items: center; gap: 10px; font-family: 'Orbitron', sans-serif; font-size: 26px; font-weight: 800; }
+  .connect-btn { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; padding: 15px; border-radius: 14px; font-weight: 700; font-size: 14.5px; border: none; margin-top: 10px; color: #fff; cursor: pointer; }
+  .connect-btn.happ { background: #ff3b3b; }
+  .connect-btn.incy { background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.18); }
+  .empty-state { text-align: center; padding: 10px 0 4px; }
+  .empty-state a { display: inline-block; margin-top: 12px; padding: 12px 22px; border-radius: 999px; background: #ff3b3b; color: #fff; font-weight: 700; font-size: 13.5px; text-decoration: none; }
+  .progress-track { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; margin: 8px 0 2px; }
+  .progress-fill { height: 100%; background: #ff3b3b; border-radius: 999px; }
+  .progress-label { font-size: 11.5px; color: #a89bcf; display: flex; justify-content: space-between; gap: 8px; }
+  .media-account-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 12.5px; }
+  .media-account-row:first-child { border-top: none; }
+  .media-status { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .media-status.pending { background: rgba(63,216,255,0.14); color: #3fd8ff; }
+  .media-status.approved { background: rgba(78,232,155,0.14); color: #4ee89b; }
+  .media-status.rejected { background: rgba(255,111,145,0.14); color: #ff6f91; }
+  .field-row { display: flex; gap: 8px; margin-top: 10px; }
+  .field-select, .field-input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.25); color: #f3f0fb; font-size: 13px; }
+
+  .copy-row { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 9px 10px; }
+  .copy-text { flex: 1; min-width: 0; border: none; background: transparent; color: #d6cfec; font-size: 12px; padding: 4px 2px; }
+  .copy-btn { flex: 0 0 auto; padding: 8px 12px; border-radius: 8px; border: none; background: rgba(255,255,255,0.1); color: #f3f0fb; font-size: 11.5px; font-weight: 700; cursor: pointer; }
+  .copy-btn.copied { background: rgba(78,232,155,0.2); color: #4ee89b; }
+
+  .subpage { position: fixed; inset: 0; background: #0a0714; z-index: 40; display: none; flex-direction: column; }
+  .subpage.show { display: flex; }
+  .subpage-header { display: flex; align-items: center; gap: 12px; padding: max(16px, env(safe-area-inset-top)) 16px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); flex: 0 0 auto; }
+  .subpage-back { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.08); color: #f3f0fb; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: 0 0 auto; }
+  .subpage-title { font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 700; }
+  .subpage-body { flex: 1; overflow-y: auto; padding: 16px 16px max(24px, env(safe-area-inset-bottom)); max-width: 520px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+
+  .prize-gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 12px 0 4px; }
+  .prize-card { border-radius: 16px; overflow: hidden; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); text-align: center; position: relative; }
+  .prize-card.locked { opacity: 0.55; }
+  .prize-card.reached { border-color: rgba(78,232,155,0.5); }
+  .prize-card img { display: block; width: 100%; height: 90px; object-fit: contain; background: rgba(255,255,255,0.03); padding: 8px; box-sizing: border-box; }
+  .prize-card .prize-icon-wrap { width: 100%; height: 90px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); }
+  .prize-card .prize-body { padding: 8px 10px 10px; }
+  .prize-card .prize-need { font-size: 10px; color: #a89bcf; font-weight: 800; margin-bottom: 3px; }
+  .prize-card .prize-name { font-size: 10.5px; line-height: 1.25; min-height: 26px; }
+  .prize-card .prize-cash { font-size: 10px; color: #ffd27a; margin-top: 3px; font-weight: 700; }
+  .prize-card .reached-badge { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; background: #4ee89b; display: flex; align-items: center; justify-content: center; }
+
+  .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+  .plan-card { border-radius: 16px; padding: 16px 12px; text-align: center;
+    background: linear-gradient(165deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)); border: 1px solid rgba(255,255,255,0.1); }
+  .plan-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .plan-price { font-size: 19px; font-weight: 800; font-family: 'Orbitron', sans-serif; color: #ffd27a; margin-bottom: 12px; }
+  .gate-note { margin-top: 10px; }
+  .gate-link { display: block; text-align: center; text-decoration: none; margin-top: 8px; }
+
+  .cases-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+  .case-card {
+    border-radius: 16px; padding: 16px 12px; text-align: center; cursor: pointer;
+    background: linear-gradient(165deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+    border: 1px solid rgba(255,255,255,0.1); transition: border-color .2s, transform .2s;
+  }
+  .case-card:active { transform: scale(0.97); }
+  .case-card.tier-0 { --tier-a: #3fd8ff; --tier-b: #2a8fd9; }
+  .case-card.tier-1 { --tier-a: #ff2fb0; --tier-b: #a24bff; }
+  .case-card.tier-2 { --tier-a: #ffcf5c; --tier-b: #ff8a3d; }
+  .case-card.tier-3 { --tier-a: #ff4d6d; --tier-b: #ff2fb0; }
+  .case-card:hover { border-color: color-mix(in srgb, var(--tier-a) 60%, transparent); }
+
+  .case-crate { position: relative; width: 92px; height: 92px; margin: 0 auto 8px; border-radius: 16px; overflow: hidden;
+    background: linear-gradient(145deg, #201a38, #0c0918);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 12px 22px -10px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .case-card:hover .case-crate { transform: perspective(400px) rotateX(6deg) rotateY(-8deg) translateY(-3px) scale(1.04);
+    box-shadow: 0 16px 26px -10px rgba(0,0,0,0.7), 0 0 22px -4px var(--tier-a); }
+  .crate-glow { position: absolute; inset: -30%; background: radial-gradient(circle, var(--tier-a), transparent 65%); opacity: .3; filter: blur(6px); animation: crate-pulse 2.6s ease-in-out infinite; }
+  .crate-shine { position: absolute; top: -60%; left: -70%; width: 40%; height: 220%; background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent); transform: rotate(18deg); animation: crate-shine 3.4s ease-in-out infinite; pointer-events: none; }
+  .crate-emblem { position: relative; color: var(--tier-a); filter: drop-shadow(0 0 10px var(--tier-a)); display: flex; }
+  .crate-band { position: absolute; left: 0; right: 0; bottom: 0; height: 7px; background: linear-gradient(90deg, var(--tier-a), var(--tier-b)); }
+  .crate-lock { position: absolute; bottom: -5px; right: -5px; width: 22px; height: 22px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--tier-a), var(--tier-b)); border: 2px solid rgba(10,7,20,0.9);
+    display: flex; align-items: center; justify-content: center; }
+  @keyframes crate-shine { 0%, 100% { left: -70%; } 50% { left: 130%; } }
+  @keyframes crate-pulse { 0%, 100% { opacity: .22; } 50% { opacity: .48; } }
+
+  .case-tier-tag { font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--tier-a); margin-bottom: 2px; }
+  .case-title { font-size: 12.5px; font-weight: 600; }
+  .case-cost { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 12.5px; color: #ffd27a; margin: 6px 0 10px; font-weight: 700; }
+  .case-open-btn { width: 100%; padding: 10px; border-radius: 10px; border: none; background: #ff3b3b; color: #fff; font-weight: 700; font-size: 12.5px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .case-open-btn:disabled { opacity: 0.4; }
+  .case-preview-btn { width: 100%; padding: 9px; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); color: #f3f0fb; }
+
+  /* rarity palette, CS:GO-style */
+  .r-common { --r: #b0c3d9; } .r-uncommon { --r: #5e98d9; } .r-rare { --r: #7b5cff; } .r-epic { --r: #d32ce6; } .r-legendary { --r: #ff4655; }
+
+  .case-modal-overlay { position: fixed; inset: 0; background: rgba(5,3,12,0.86); display: none; align-items: flex-end; justify-content: center; z-index: 25; }
+  .case-modal-overlay.show { display: flex; }
+  .case-modal { width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; background: linear-gradient(180deg, #171126, #0a0714);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 22px 22px 0 0; padding: 20px; position: relative; }
+  .case-modal-close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.08); color: #f3f0fb; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .case-modal-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; padding-right: 30px; }
+  .case-modal-head h3 { margin: 0 0 4px; font-family: 'Orbitron', sans-serif; font-size: 16px; }
+  .cm-prizes-title { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: #a89bcf; margin: 4px 0 8px; }
+  .cm-prizes { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin-bottom: 18px; }
+  .prize-chip { border-radius: 12px; padding: 10px 6px 8px; text-align: center; background: rgba(255,255,255,0.04);
+    border: 1px solid color-mix(in srgb, var(--r) 45%, rgba(255,255,255,0.1)); box-shadow: inset 0 0 14px -6px color-mix(in srgb, var(--r) 70%, transparent); }
+  .prize-chip .pc-icon { color: var(--r); filter: drop-shadow(0 0 6px var(--r)); display: flex; align-items: center; justify-content: center; }
+  .prize-chip .pc-title { font-size: 10.5px; margin: 4px 0 2px; line-height: 1.2; min-height: 24px; }
+  .prize-chip .pc-chance { font-size: 10px; font-weight: 800; color: var(--r); }
+
+  .roulette-wrap { position: relative; margin-bottom: 18px; display: none; }
+  .roulette-viewport { overflow: hidden; border-radius: 14px; border: 1px solid rgba(255,255,255,0.14);
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.25)); height: 104px; }
+  .roulette-strip { display: flex; height: 100%; will-change: transform; }
+  .roulette-cell { flex: 0 0 92px; margin: 6px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.04); border: 1px solid color-mix(in srgb, var(--r) 50%, rgba(255,255,255,0.1));
+    box-shadow: inset 0 0 12px -6px color-mix(in srgb, var(--r) 70%, transparent); }
+  .roulette-cell .rc-icon { color: var(--r); filter: drop-shadow(0 0 6px var(--r)); display: flex; align-items: center; justify-content: center; }
+  .roulette-cell.win { animation: win-pulse .6s ease-in-out 2; border-color: var(--r); }
+  @keyframes win-pulse { 0%, 100% { box-shadow: inset 0 0 12px -6px var(--r); } 50% { box-shadow: 0 0 22px 2px var(--r); } }
+  .roulette-pointer { position: absolute; left: 50%; top: -6px; bottom: -6px; width: 2px; background: #ff3b3b;
+    transform: translateX(-50%); z-index: 2; box-shadow: 0 0 10px #ff3b3b; }
+  .roulette-pointer::before, .roulette-pointer::after { content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+    border: 7px solid transparent; }
+  .roulette-pointer::before { top: -6px; border-top: 0; border-bottom-color: #ff3b3b; }
+  .roulette-pointer::after { bottom: -6px; border-bottom: 0; border-top-color: #ff3b3b; }
+  .result-overlay { position: fixed; inset: 0; background: rgba(5,3,12,0.82); display: none; align-items: center; justify-content: center; z-index: 30; padding: 20px; }
+  .result-overlay.show { display: flex; }
+  .result-card { background: linear-gradient(165deg, rgba(255,59,59,0.22), rgba(20,14,36,0.98)); border: 1px solid rgba(255,59,59,0.5); border-radius: 20px; padding: 30px 26px; text-align: center; max-width: 320px; }
+  .result-icon { display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,59,59,0.28), transparent 70%); }
+  .result-card h3 { margin: 0 0 6px; font-family: 'Orbitron', sans-serif; font-size: 17px; }
+  .result-card button { margin-top: 18px; padding: 12px 26px; border-radius: 999px; border: none; background: #ff3b3b; color: #fff; font-weight: 700; cursor: pointer; }
+
+  /* Круг апгрейдера — subscription-upgrade gauge, deliberately off-brand (navy/orange) so the
+     staking game reads apart from the rest of the app's pink/purple chrome. */
+  .ug-panel { border-radius: 18px; background: linear-gradient(#202630,#11151c); border: 1px solid rgba(255,255,255,0.08); padding: 18px 16px 20px; margin-bottom: 14px; font-family: Arial, Helvetica, sans-serif; }
+  .ug-eyebrow { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 4px; color: #9da5b1; font-size: 11px; font-weight: bold; letter-spacing: 1.4px; text-transform: uppercase; }
+  .ug-live { color: #58d78e; letter-spacing: normal; text-transform: none; }
+  .ug-live:before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: #58d78e; box-shadow: 0 0 10px #58d78e; }
+  .ug-sub-row { display: flex; align-items: baseline; justify-content: space-between; margin: 10px 2px 16px; padding-bottom: 14px; border-bottom: 1px solid #2a313c; color: #fff; }
+  .ug-mult-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .ug-mult-btn { text-align: center; padding: 9px 4px; border-radius: 10px; border: 1px solid #4d5663; background: #29313c; cursor: pointer; color: #fff; }
+  .ug-mult-btn.active { border-color: transparent; background: linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008); box-shadow: 0 8px 18px -6px rgba(255,103,11,.4); }
+  .ug-mult-val { font-size: 15px; font-weight: 800; }
+  .ug-mult-chance { font-size: 10.5px; font-weight: 700; margin-top: 3px; color: #8fd98f; }
+  .ug-mult-btn.active .ug-mult-chance { color: #fff0dc; }
+  .ug-gauge-wrap { position: relative; width: min(100%, 320px); margin: 0 auto; aspect-ratio: 1; }
+  .ug-needle { transform-origin: 220px 220px; transform: rotate(0deg); }
+  .ug-center { position: absolute; inset: 0; display: grid; place-content: center; align-content: center; gap: 6px; text-align: center; pointer-events: none; }
+  .ug-percent { font-size: clamp(30px, 8vw, 42px); font-weight: 800; letter-spacing: -2px; color: #fff; text-shadow: 0 3px 10px #000; }
+  .ug-caption { font-size: 14px; font-weight: 700; color: #fff; text-shadow: 0 2px 8px #000; }
+  .ug-outcome { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 14px 0 16px; color: #fff; }
+  .ug-cta { width: 100%; padding: 13px; border-radius: 12px; background: linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008); color: #fff; font-weight: 800; font-size: 14px; text-align: center; border: none; cursor: pointer; box-shadow: 0 14px 26px -10px rgba(255,103,11,.33); }
+  .ug-cta:disabled { opacity: .5; }
+  .ug-hint { margin: 14px auto 0; max-width: 310px; color: #89919d; font-size: 11.5px; line-height: 1.45; text-align: center; }
+  .ug-fair-link { display: block; text-align: center; margin-top: 8px; font-size: 11px; color: #6c9fd9; text-decoration: underline; }
+
+  .ug-stake-toggle { display: flex; gap: 8px; margin: 4px 0 14px; }
+  .ug-stake-btn { flex: 1; text-align: center; padding: 9px 4px; border-radius: 10px; border: 1px solid #4d5663; background: #29313c; cursor: pointer; color: #cfd4db; font-size: 12.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .ug-stake-btn.active { border-color: transparent; background: linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008); color: #fff; }
+  .ug-slider-row { margin-bottom: 16px; }
+  .ug-slider-label { display: flex; justify-content: space-between; font-size: 12px; color: #c7ccd3; margin-bottom: 8px; }
+  .ug-slider-label b { color: #fff; font-size: 14px; }
+  .ug-slider { width: 100%; -webkit-appearance: none; appearance: none; height: 6px; border-radius: 999px; background: #303742; outline: none; }
+  .ug-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008); border: 2px solid #fff; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+  .ug-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008); border: 2px solid #fff; cursor: pointer; }
+
+  .confetti-canvas { position: fixed; inset: 0; z-index: 45; pointer-events: none; }
+  @keyframes result-shake { 10%, 90% { transform: translateX(-1px); } 20%, 80% { transform: translateX(2px); } 30%, 50%, 70% { transform: translateX(-5px); } 40%, 60% { transform: translateX(5px); } }
+  .result-card.lose { animation: result-shake .55s cubic-bezier(.36,.07,.19,.97); border-color: rgba(255,90,90,0.7); }
+  @keyframes result-flash { 0% { background: rgba(255,59,59,0.35); } 100% { background: rgba(5,3,12,0.82); } }
+  .result-overlay.lose { animation: result-flash .6s ease-out; }
+
+  @media (max-width: 380px) {
+    .coins-row { font-size: 22px; }
+    .case-crate { width: 78px; height: 78px; }
+    .tab { font-size: 11.5px; gap: 4px; padding: 10px 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab" id="tab-cabinet"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>Кабинет</div>
+    <div class="tab" id="tab-subs"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>Подписки</div>
+    <div class="tab" id="tab-cases"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/><path d="m7.5 4.27 9 5.15"/></svg>Кейсы</div>
+    <div class="tab" id="tab-upgrade"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Апгрейд</div>
+  </div>
+
+  <div id="view-cabinet"></div>
+  <div id="view-subs" style="display:none"></div>
+  <div id="view-cases" style="display:none"></div>
+  <div id="view-upgrade" style="display:none"></div>
+</div>
+
+<div class="result-overlay" id="result-overlay">
+  <div class="result-card">
+    <div class="result-icon" id="result-icon"></div>
+    <h3 id="result-title">Приз получен</h3>
+    <div class="muted" id="result-desc"></div>
+    <button id="result-close">Отлично</button>
+  </div>
+</div>
+
+<div class="subpage" id="subpage">
+  <div class="subpage-header">
+    <div class="subpage-back" id="subpage-back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></div>
+    <div class="subpage-title" id="subpage-title"></div>
+  </div>
+  <div class="subpage-body" id="subpage-body"></div>
+</div>
+
+<div class="case-modal-overlay" id="case-modal">
+  <div class="case-modal">
+    <button class="case-modal-close" id="case-modal-close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    <div class="case-modal-head">
+      <div class="case-crate" id="cm-crate" style="width:76px;height:76px;margin:0">
+        <div class="crate-glow"></div>
+        <div class="crate-shine"></div>
+        <div class="crate-emblem" id="cm-emblem"></div>
+        <div class="crate-band"></div>
+        <div class="crate-lock"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0c0918" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      </div>
+      <div>
+        <div class="case-tier-tag" id="cm-tier"></div>
+        <h3 id="cm-title"></h3>
+        <div class="muted" style="display:flex;align-items:center;gap:5px;">Стоимость: <svg width="13" height="13" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ffd27a" stroke="#b8761a" stroke-width="1.4"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#b8761a" stroke-width="1" opacity=".5"/><path d="M9.6 9.5c0-1 1.1-1.7 2.4-1.7s2.4.7 2.4 1.7-1.1 1.3-2.4 1.7-2.4.7-2.4 1.7 1.1 1.7 2.4 1.7 2.4-.7 2.4-1.7" stroke="#8a5710" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M12 6.9v1M12 16.1v1" stroke="#8a5710" stroke-width="1.3" stroke-linecap="round"/></svg><span id="cm-cost" style="color:#ffd27a;font-weight:700;"></span></div>
+      </div>
+    </div>
+
+    <div class="roulette-wrap" id="roulette-wrap">
+      <div class="roulette-pointer"></div>
+      <div class="roulette-viewport"><div class="roulette-strip" id="roulette-strip"></div></div>
+    </div>
+
+    <div class="cm-prizes-title">Возможные призы</div>
+    <div class="cm-prizes" id="cm-prizes"></div>
+
+    <button class="case-open-btn" id="cm-open-btn">Открыть за <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ffd27a" stroke="#b8761a" stroke-width="1.4"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#b8761a" stroke-width="1" opacity=".5"/><path d="M9.6 9.5c0-1 1.1-1.7 2.4-1.7s2.4.7 2.4 1.7-1.1 1.3-2.4 1.7-2.4.7-2.4 1.7 1.1 1.7 2.4 1.7 2.4-.7 2.4-1.7" stroke="#8a5710" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M12 6.9v1M12 16.1v1" stroke="#8a5710" stroke-width="1.3" stroke-linecap="round"/></svg> <span id="cm-open-cost2"></span></button>
+  </div>
+</div>
+
+<script>
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+const initData = tg ? tg.initData : '';
+let botUsername = null;
+const botUsernameReady = fetch('/api/status').then((r) => r.json()).then((s) => { botUsername = s.botUsername; }).catch(() => {});
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    ...opts,
+    headers: { ...(opts.headers || {}), 'X-Telegram-Init-Data': initData, 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error(await res.text().catch(() => res.statusText));
+  return res.json();
+}
+
+function openLink(url) {
+  if (tg && tg.openLink) tg.openLink(url, { try_instant_view: false });
+  else window.location.href = url;
+}
+
+function fmtDate(sqlDate) {
+  if (!sqlDate) return '—';
+  const d = new Date(sqlDate.replace(' ', 'T') + 'Z');
+  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function progressPct(current, base, target) {
+  if (!target || target <= base) return 100;
+  return Math.min(100, Math.max(0, ((current - base) / (target - base)) * 100));
+}
+
+const MEDIA_PLATFORM_LABEL = { youtube: 'YouTube', instagram: 'Instagram', tiktok: 'TikTok' };
+const MEDIA_STATUS_LABEL = { pending: 'на модерации', approved: 'одобрено', rejected: 'отклонено' };
+
+async function copyToClipboard(text, btn) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    if (btn) {
+      const original = btn.textContent;
+      btn.textContent = 'Скопировано';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1500);
+    }
+  } catch {
+    if (tg && tg.showAlert) tg.showAlert('Не удалось скопировать — выделите ссылку вручную.');
+  }
+}
+
+function openSubPage(title) {
+  document.getElementById('subpage-title').textContent = title;
+  document.getElementById('subpage-body').innerHTML = '<div class="card muted">Загрузка…</div>';
+  document.getElementById('subpage').classList.add('show');
+}
+function closeSubPage() {
+  document.getElementById('subpage').classList.remove('show');
+}
+document.getElementById('subpage-back').addEventListener('click', closeSubPage);
+
+function prizeGalleryHtml(milestones, currentValue, extraLine) {
+  return `<div class="prize-gallery">
+    ${milestones.map((m) => {
+      const threshold = m.count ?? m.views;
+      const reached = threshold <= currentValue;
+      const media = m.image
+        ? `<img src="${m.image}" alt="">`
+        : `<div class="prize-icon-wrap">${svgIcon(m.icon || 'coin', 32, { color: reached ? '#4ee89b' : '#a89bcf' })}</div>`;
+      return `
+      <div class="prize-card ${reached ? 'reached' : 'locked'}">
+        ${reached ? `<div class="reached-badge">${svgIcon('shieldCheck', 12, { color: '#0c2216', strokeWidth: 3 })}</div>` : ''}
+        ${media}
+        <div class="prize-body">
+          <div class="prize-need">${threshold.toLocaleString('ru-RU')}</div>
+          <div class="prize-name">${m.prize}</div>
+          ${extraLine ? `<div class="prize-cash">${extraLine(m)}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+let lastMe = null;
+let lastReferrals = null;
+
+function openReferralPage() {
+  openSubPage('Реферальная программа');
+  const referrals = lastReferrals;
+  const link = botUsername ? `https://t.me/${botUsername}?start=ref_${lastMe.referral.code}` : '';
+  const body = document.getElementById('subpage-body');
+  body.innerHTML = `
+    <div class="card">
+      <h2>Приглашайте друзей</h2>
+      <div class="muted">За первую оплату друга вы оба получаете 7 бесплатных дней. Дальше вы получаете <b style="color:#f3f0fb">${referrals.commissionPercent}%</b> с каждой его следующей оплаты — пожизненно.</div>
+      <div class="copy-row" style="margin-top:10px;">
+        <input class="copy-text" id="ref-link-input-2" readonly value="${link}" onclick="this.select()">
+        <button class="copy-btn" id="copy-ref-link-2">Копировать</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="muted">Оплативших рефералов</div>
+      <div class="expiry" style="font-size:30px;">${referrals.stats.payingReferrals}</div>
+      <div class="muted" style="margin-top:6px;">Баланс к выводу: <b style="color:#ffd27a">${referrals.stats.balanceRub} ₽</b> — для вывода напишите в поддержку.</div>
+    </div>
+    <div class="card">
+      <h2>Призы за приглашённых</h2>
+      ${prizeGalleryHtml(referrals.milestones, referrals.stats.payingReferrals, (m) => `или ${m.cashRub.toLocaleString('ru-RU')} ₽`)}
+      ${referrals.stats.nextMilestone ? `
+        <div class="progress-label" style="margin-top:6px;"><span>${referrals.stats.payingReferrals}/${referrals.stats.nextMilestone.count}</span><span>до следующего приза</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${progressPct(referrals.stats.payingReferrals, referrals.stats.progressBase, referrals.stats.nextMilestone.count)}%"></div></div>`
+        : '<div class="muted" style="margin-top:8px;">Все призы разблокированы 🏆</div>'}
+    </div>`;
+  document.getElementById('copy-ref-link-2').addEventListener('click', (e) => copyToClipboard(link, e.currentTarget));
+}
+
+async function openMediaPage() {
+  openSubPage('Медиа-рефералы');
+  await renderMediaPage();
+}
+
+async function renderMediaPage() {
+  const body = document.getElementById('subpage-body');
+  let mediaInfo;
+  try { mediaInfo = await api('/api/app/media'); }
+  catch { body.innerHTML = '<div class="card muted">Не получилось загрузить.</div>'; return; }
+
+  body.innerHTML = `
+    <div class="card">
+      <h2>Продвигайте TOKYO VPN</h2>
+      <div class="muted">Публикуйте ролики с рекламой (баннер, прямая или нативная — без накрутки, в описании юзер или ссылка бота) и получайте <b style="color:#f3f0fb">$${mediaInfo.payoutPer100k}</b> за каждые 100 000 просмотров, выплата раз в неделю через поддержку.</div>
+    </div>
+    <div class="card">
+      <div class="muted">Одобренных просмотров</div>
+      <div class="expiry" style="font-size:30px;">${mediaInfo.stats.totalViews.toLocaleString('ru-RU')}</div>
+      <div class="muted" style="margin-top:6px;">К выплате: <b style="color:#ffd27a">$${mediaInfo.stats.pendingPayoutUsd}</b></div>
+    </div>
+    <div class="card">
+      <h2>Призы за просмотры</h2>
+      ${prizeGalleryHtml(mediaInfo.milestones, mediaInfo.stats.totalViews)}
+      ${mediaInfo.stats.nextMilestone ? `
+        <div class="progress-label" style="margin-top:6px;"><span>${mediaInfo.stats.totalViews.toLocaleString('ru-RU')}/${mediaInfo.stats.nextMilestone.views.toLocaleString('ru-RU')}</span><span>до следующего приза</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${progressPct(mediaInfo.stats.totalViews, mediaInfo.stats.progressBase, mediaInfo.stats.nextMilestone.views)}%"></div></div>`
+        : '<div class="muted" style="margin-top:8px;">Все призы разблокированы 🏆</div>'}
+    </div>
+    <div class="card">
+      <h2>Ваши аккаунты</h2>
+      ${mediaInfo.stats.accounts.length ? mediaInfo.stats.accounts.map((a) => `
+        <div class="media-account-row">
+          <span>${MEDIA_PLATFORM_LABEL[a.platform] || a.platform}${a.status === 'approved' ? ` · ${a.views.toLocaleString('ru-RU')} просм.` : ''}</span>
+          <span class="media-status ${a.status}">${MEDIA_STATUS_LABEL[a.status]}</span>
+        </div>`).join('') : '<div class="muted">Пока нет добавленных аккаунтов.</div>'}
+      <div class="field-row" style="margin-top:12px;">
+        <select class="field-select" id="media-platform">
+          ${mediaInfo.platforms.map((p) => `<option value="${p}">${MEDIA_PLATFORM_LABEL[p] || p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-row">
+        <input class="field-input" id="media-url" placeholder="Ссылка на аккаунт/канал">
+      </div>
+      <button class="case-open-btn" id="media-add-btn" style="width:100%;margin-top:8px;">Добавить</button>
+    </div>`;
+
+  document.getElementById('media-add-btn').addEventListener('click', async () => {
+    const platform = document.getElementById('media-platform').value;
+    const url = document.getElementById('media-url').value.trim();
+    if (!url) return showResult({ title: 'Укажите ссылку', desc: 'Вставьте ссылку на аккаунт или канал.' }, true);
+    const btn = document.getElementById('media-add-btn');
+    btn.disabled = true;
+    try {
+      await api('/api/app/media/accounts', { method: 'POST', body: JSON.stringify({ platform, url }) });
+      await renderMediaPage();
+    } catch (e) {
+      let payload = null;
+      try { payload = JSON.parse(e.message); } catch {}
+      const desc = payload?.error === 'limit_reached' ? `Уже добавлено максимум аккаунтов (${mediaInfo.maxPerPlatform}) для этой площадки.`
+        : payload?.error === 'bad_url' ? 'Это не похоже на ссылку.'
+        : 'Попробуйте ещё раз.';
+      showResult({ title: 'Не получилось добавить', desc }, true);
+      btn.disabled = false;
+    }
+  });
+}
+
+async function renderCabinet() {
+  const el = document.getElementById('view-cabinet');
+  el.innerHTML = '<div class="card muted">Загрузка…</div>';
+  let me, referrals, mediaInfo;
+  try {
+    [me, referrals, mediaInfo] = await Promise.all([
+      api('/api/app/me'), api('/api/app/referrals'), api('/api/app/media'), botUsernameReady,
+    ]);
+  }
+  catch { el.innerHTML = '<div class="card muted">Откройте личный кабинет из бота TOKYO VPN — вне Telegram он не работает.</div>'; return; }
+
+  lastMe = me;
+  lastReferrals = referrals;
+
+  if (!me.subscription) {
+    el.innerHTML = `
+      <div class="card empty-state">
+        <h2>Подписки пока нет</h2>
+        <p class="muted">${me.trialAvailable ? 'Активируйте 3 дня бесплатно прямо в боте.' : 'Оформите подписку в боте, чтобы получить доступ.'}</p>
+        <a href="#" id="open-bot">Открыть меню бота</a>
+      </div>`;
+    document.getElementById('open-bot').addEventListener('click', (e) => { e.preventDefault(); if (tg) tg.close(); });
+    return;
+  }
+
+  const s = me.subscription;
+  const refLink = botUsername ? `https://t.me/${botUsername}?start=ref_${me.referral.code}` : '';
+  el.innerHTML = `
+    <div class="card">
+      <div class="muted">Подписка · ${s.plan}</div>
+      <div class="expiry">${daysUntil(s.expiresAt)} ${daysWord(daysUntil(s.expiresAt))}</div>
+      <div class="muted" style="margin-top:2px;">до ${fmtDate(s.expiresAt)}</div>
+    </div>
+    <div class="card">
+      <div class="muted">Баланс монет за кейсы</div>
+      <div class="coins-row">${svgIcon('coin', 24, { color: '#ffd27a' })} ${me.coins}</div>
+    </div>
+    <div class="card">
+      <h2>Подключить · ${me.devices.list.length}/${me.devices.max} устройств</h2>
+      <div class="muted">Каждое устройство — своя ссылка, не пересылайте их.</div>
+      ${me.devices.list.map((d, i) => `
+        <div class="device-block" style="${i > 0 ? 'margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);' : 'margin-top:10px;'}">
+          <div class="muted" style="margin-bottom:8px;">${d.label}</div>
+          <button class="connect-btn happ" data-uuid="${d.uuid}" data-happ="${d.happLink || ''}">📲 Открыть в Happ</button>
+          <button class="connect-btn incy" data-uuid="${d.uuid}" data-incy="${d.vlessLink || ''}">📲 Открыть в INCY</button>
+          ${d.subscriptionUrl ? `
+            <div class="copy-row" style="margin-top:8px;">
+              <input class="copy-text" readonly value="${d.subscriptionUrl}" onclick="this.select()">
+              <button class="copy-btn" data-copy="${d.subscriptionUrl}">Копировать</button>
+            </div>` : ''}
+          ${me.devices.list.length > 1 ? `<button class="case-preview-btn" data-remove="${d.uuid}" style="margin-top:8px;">Удалить устройство</button>` : ''}
+        </div>`).join('')}
+      ${me.devices.list.length < me.devices.max ? `<button class="case-open-btn" id="btn-add-device" style="margin-top:14px;">+ Добавить устройство</button>` : ''}
+    </div>
+    <div class="card">
+      <h2>Реферальная ссылка</h2>
+      <div class="copy-row">
+        <input class="copy-text" id="ref-link-input" readonly value="${refLink}" onclick="this.select()">
+        <button class="copy-btn" id="copy-ref-link">Копировать</button>
+      </div>
+      <div class="muted" style="margin-top:10px;">${referrals.commissionPercent}% с оплат приглашённых — пожизненно. Баланс: <b style="color:#ffd27a">${referrals.stats.balanceRub} ₽</b></div>
+      <button class="case-preview-btn" id="open-referral-page" style="margin-top:10px;">Открыть программу и призы →</button>
+    </div>
+    <div class="card">
+      <h2>Медиа-рефералы</h2>
+      <div class="muted">Одобренных просмотров: <b style="color:#f3f0fb">${mediaInfo.stats.totalViews.toLocaleString('ru-RU')}</b>. К выплате: <b style="color:#ffd27a">$${mediaInfo.stats.pendingPayoutUsd}</b>.</div>
+      <button class="case-preview-btn" id="open-media-page" style="margin-top:10px;">Открыть программу и призы →</button>
+    </div>`;
+
+  el.querySelectorAll('.connect-btn.happ').forEach((btn) => {
+    btn.addEventListener('click', () => { if (btn.dataset.happ) openLink(btn.dataset.happ); });
+  });
+  el.querySelectorAll('.connect-btn.incy').forEach((btn) => {
+    btn.addEventListener('click', () => { if (btn.dataset.incy) openLink(btn.dataset.incy); });
+  });
+  el.querySelectorAll('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', (e) => copyToClipboard(btn.dataset.copy, e.currentTarget));
+  });
+  el.querySelectorAll('[data-remove]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      try { await api(`/api/app/devices/${btn.dataset.remove}`, { method: 'DELETE' }); renderCabinet(); }
+      catch { alert('Не удалось удалить устройство'); }
+    });
+  });
+  document.getElementById('btn-add-device')?.addEventListener('click', async () => {
+    try { await api('/api/app/devices', { method: 'POST' }); renderCabinet(); }
+    catch { alert('Не удалось добавить устройство'); }
+  });
+  document.getElementById('copy-ref-link').addEventListener('click', (e) => copyToClipboard(refLink, e.currentTarget));
+  document.getElementById('open-referral-page').addEventListener('click', openReferralPage);
+  document.getElementById('open-media-page').addEventListener('click', openMediaPage);
+}
+
+async function renderSubs() {
+  const el = document.getElementById('view-subs');
+  el.innerHTML = '<div class="card muted">Загрузка…</div>';
+  let me, status;
+  try {
+    [me, status] = await Promise.all([api('/api/app/me'), fetch('/api/status').then((r) => r.json())]);
+  } catch {
+    el.innerHTML = '<div class="card muted">Откройте раздел из бота TOKYO VPN.</div>';
+    return;
+  }
+
+  const planCards = (suffix, action) => Object.entries(status.plans).map(([key, plan]) => `
+    <div class="plan-card">
+      <div class="plan-title">${plan.label}</div>
+      <div class="plan-price">${plan.price} ₽</div>
+      <button class="case-open-btn ${action}-btn" data-key="${key}">${suffix}</button>
+    </div>`).join('');
+
+  el.innerHTML = `
+    ${me.trialAvailable ? `
+    <div class="card">
+      <h2>Пробный период</h2>
+      <div class="muted">${status.trialDays} дня бесплатно, без привязки карты.</div>
+      <button class="case-open-btn" id="trial-btn" style="width:100%;margin-top:12px;">Активировать бесплатно</button>
+      <div id="trial-gate"></div>
+    </div>` : ''}
+    <div class="card">
+      <h2>Тарифы</h2>
+      <div class="plans-grid">${planCards('Купить', 'plan-buy')}</div>
+    </div>
+    <div class="card">
+      <h2>Подарить подписку другу</h2>
+      <div class="muted">Оплатите тариф — пришлём ссылку, которую можно отправить другу. Подписка активируется у него, как только он её откроет.</div>
+      <div class="plans-grid" style="margin-top:10px;">${planCards('Подарить', 'plan-gift')}</div>
+    </div>`;
+
+  el.querySelectorAll('.plan-buy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      try {
+        const result = await api(`/api/app/plan/${btn.dataset.key}/pay`, { method: 'POST' });
+        openLink(result.url);
+      } catch {
+        showResult({ title: 'Не получилось создать платёж', desc: 'Попробуйте ещё раз чуть позже.' }, true);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+
+  el.querySelectorAll('.plan-gift-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      try {
+        const result = await api(`/api/app/plan/${btn.dataset.key}/gift`, { method: 'POST' });
+        openLink(result.url);
+      } catch {
+        showResult({ title: 'Не получилось создать платёж', desc: 'Попробуйте ещё раз чуть позже.' }, true);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+
+  const trialBtn = document.getElementById('trial-btn');
+  if (trialBtn) trialBtn.addEventListener('click', () => activateTrial(trialBtn, status.trialDays));
+}
+
+async function activateTrial(btn, trialDays) {
+  const gateEl = document.getElementById('trial-gate');
+  btn.disabled = true;
+  gateEl.innerHTML = '';
+  try {
+    await api('/api/app/trial', { method: 'POST' });
+    showResult({ title: 'Пробный период активирован', kind: 'days', value: trialDays });
+    renderSubs();
+  } catch (e) {
+    let payload = null;
+    try { payload = JSON.parse(e.message); } catch {}
+    if (payload?.error === 'channel_required') {
+      gateEl.innerHTML = `
+        <div class="muted gate-note">Подпишитесь на наш канал, чтобы активировать пробный период.</div>
+        ${payload.channelUrl ? `<a href="${payload.channelUrl}" target="_blank" class="case-open-btn gate-link">Подписаться на канал</a>` : ''}
+        <button class="case-preview-btn gate-note" id="trial-recheck">Я подписался, проверить</button>`;
+      document.getElementById('trial-recheck').addEventListener('click', () => activateTrial(btn, trialDays));
+    } else {
+      gateEl.innerHTML = '<div class="muted gate-note">Не получилось активировать, попробуйте ещё раз.</div>';
+    }
+    btn.disabled = false;
+  }
+}
+
+const ICON_PATHS = {
+  pc: '<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>',
+  radar: '<path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"/><path d="M4 6h.01"/><path d="M2.29 9.62A10 10 0 1 0 21.31 8.35"/><path d="M16.24 7.76A6 6 0 1 0 8.23 16.67"/><path d="M12 18h.01"/><path d="M17.99 11.66A6 6 0 0 1 15.77 16.67"/><circle cx="12" cy="12" r="2"/><path d="m13.41 10.59 5.66-5.66"/>',
+  gem: '<path d="M10.5 3 8 9l4 13 4-13-2.5-6"/><path d="M17 3a2 2 0 0 1 1.6.8l3 4a2 2 0 0 1 .013 2.382l-7.99 10.986a2 2 0 0 1-3.247 0l-7.99-10.986A2 2 0 0 1 2.4 7.8l2.998-3.997A2 2 0 0 1 7 3z"/><path d="M2 9h20"/>',
+  crown: '<path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/>',
+  flame: '<path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/>',
+  lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  shieldCheck: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  ticketPercent: '<path d="M2 9a3 3 0 1 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 1 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M9 9h.01"/><path d="m15 9-6 6"/><path d="M15 15h.01"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  trophy: '<path d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2"/><path d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2"/><path d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3"/><path d="M4 22h16"/><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"/><path d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3"/>',
+  frown: '<path d="M15 10V9"/><path d="M9 10V9"/><path d="M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="12" r="10"/>',
+};
+function coinIcon(size) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" fill="#ffd27a" stroke="#b8761a" stroke-width="1.4"/>
+    <circle cx="12" cy="12" r="7.2" fill="none" stroke="#b8761a" stroke-width="1" opacity=".5"/>
+    <path d="M9.6 9.5c0-1 1.1-1.7 2.4-1.7s2.4.7 2.4 1.7-1.1 1.3-2.4 1.7-2.4.7-2.4 1.7 1.1 1.7 2.4 1.7 2.4-.7 2.4-1.7" stroke="#8a5710" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <path d="M12 6.9v1M12 16.1v1" stroke="#8a5710" stroke-width="1.3" stroke-linecap="round"/>
+  </svg>`;
+}
+function svgIcon(name, size, opts = {}) {
+  if (name === 'coin') return coinIcon(size);
+  const color = opts.color || 'currentColor';
+  const strokeWidth = opts.strokeWidth || 2;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name] || ''}</svg>`;
+}
+
+const TIER_ICONS = ['radar', 'gem', 'crown', 'flame'];
+const TIER_NAMES = ['RECON', 'PRIME', 'ELITE', 'COVERT'];
+const KIND_ICON = { days: 'shieldCheck', percent: 'ticketPercent', coins: 'coin' };
+let casesList = [];
+let activeCase = null; // { c, tierIdx, totalWeight, spinning }
+let activeUpgrade = null; // { multiplier, stakeType, stakeAmount, spinning }
+
+function rewardText(item) {
+  return item.kind === 'days' ? `+${item.value} дней подписки`
+    : item.kind === 'percent' ? `Скидка ${item.value}% на оплату`
+    : `+${item.value} монет`;
+}
+
+function rarityOf(item, totalWeight) {
+  const p = (item.weight / totalWeight) * 100;
+  if (p >= 35) return 'r-common';
+  if (p >= 20) return 'r-uncommon';
+  if (p >= 10) return 'r-rare';
+  if (p >= 4) return 'r-epic';
+  return 'r-legendary';
+}
+
+function pickWeightedClient(items) {
+  const total = items.reduce((s, it) => s + Math.max(0, it.weight), 0);
+  let roll = Math.random() * total;
+  for (const it of items) {
+    roll -= Math.max(0, it.weight);
+    if (roll <= 0) return it;
+  }
+  return items[items.length - 1];
+}
+
+async function renderCases() {
+  const el = document.getElementById('view-cases');
+  el.innerHTML = '<div class="card muted">Загрузка…</div>';
+  let data;
+  try { data = await api('/api/app/cases'); }
+  catch { el.innerHTML = '<div class="card muted">Откройте кейсы из бота TOKYO VPN.</div>'; return; }
+
+  casesList = data.cases;
+  el.innerHTML = '<div class="cases-grid" id="cases-grid"></div>';
+  const grid = document.getElementById('cases-grid');
+  grid.innerHTML = casesList.map((c, i) => {
+    const tierIdx = i % TIER_ICONS.length;
+    return `
+    <div class="case-card tier-${tierIdx}" data-key="${c.key}">
+      <div class="case-crate">
+        <div class="crate-glow"></div>
+        <div class="crate-shine"></div>
+        <div class="crate-emblem">${svgIcon(TIER_ICONS[tierIdx], 38)}</div>
+        <div class="crate-band"></div>
+        <div class="crate-lock">${svgIcon('lock', 12, { color: '#0c0918', strokeWidth: 2.4 })}</div>
+      </div>
+      <div class="case-tier-tag">${TIER_NAMES[tierIdx]}</div>
+      <div class="case-title">${c.title}</div>
+      <div class="case-cost">${svgIcon('coin', 14, { color: '#ffd27a' })} ${c.cost_coins}</div>
+      <button class="case-preview-btn" data-key="${c.key}">Смотреть призы</button>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.case-card').forEach((card) => {
+    card.addEventListener('click', () => openCaseModal(card.dataset.key));
+  });
+}
+
+function openCaseModal(key) {
+  const idx = casesList.findIndex((c) => c.key === key);
+  if (idx === -1) return;
+  const c = casesList[idx];
+  const tierIdx = idx % TIER_ICONS.length;
+  const totalWeight = c.items.reduce((s, it) => s + Math.max(0, it.weight), 0);
+  activeCase = { c, tierIdx, totalWeight, spinning: false };
+
+  document.getElementById('cm-crate').className = `case-crate tier-${tierIdx}`;
+  document.getElementById('cm-crate').style.cssText = 'width:76px;height:76px;margin:0';
+  document.getElementById('cm-emblem').innerHTML = svgIcon(TIER_ICONS[tierIdx], 32);
+  document.getElementById('cm-tier').textContent = TIER_NAMES[tierIdx];
+  document.getElementById('cm-title').textContent = c.title;
+  document.getElementById('cm-cost').textContent = c.cost_coins;
+  document.getElementById('cm-open-cost2').textContent = c.cost_coins;
+
+  const prizes = document.getElementById('cm-prizes');
+  prizes.innerHTML = c.items.map((it) => `
+    <div class="prize-chip ${rarityOf(it, totalWeight)}">
+      <div class="pc-icon">${svgIcon(KIND_ICON[it.kind] || 'coin', 22)}</div>
+      <div class="pc-title">${rewardText(it)}</div>
+      <div class="pc-chance">${((it.weight / totalWeight) * 100).toFixed(1)}%</div>
+    </div>`).join('');
+
+  document.getElementById('roulette-wrap').style.display = 'none';
+  prizes.style.display = 'grid';
+  document.querySelector('.cm-prizes-title').style.display = 'block';
+
+  const openBtn = document.getElementById('cm-open-btn');
+  openBtn.disabled = false;
+  openBtn.style.display = '';
+  openBtn.onclick = () => startCaseOpen();
+
+  document.getElementById('case-modal').classList.add('show');
+}
+
+function closeCaseModal() {
+  if (activeCase && activeCase.spinning) return;
+  document.getElementById('case-modal').classList.remove('show');
+}
+document.getElementById('case-modal-close').addEventListener('click', closeCaseModal);
+document.getElementById('case-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'case-modal') closeCaseModal();
+});
+
+async function startCaseOpen() {
+  if (!activeCase || activeCase.spinning) return;
+  const { c } = activeCase;
+  const openBtn = document.getElementById('cm-open-btn');
+  openBtn.disabled = true;
+
+  let result;
+  try {
+    result = await api(`/api/app/cases/${c.key}/open`, { method: 'POST' });
+  } catch (e) {
+    openBtn.disabled = false;
+    showResult({ title: 'Недостаточно монет', desc: 'Заработайте монеты, купив подписку.' }, true);
+    return;
+  }
+
+  activeCase.spinning = true;
+  document.querySelector('.cm-prizes-title').style.display = 'none';
+  document.getElementById('cm-prizes').style.display = 'none';
+  openBtn.style.display = 'none';
+  runRoulette(c.items, activeCase.totalWeight, result.item, () => {
+    activeCase.spinning = false;
+    showResult(result.item);
+  });
+}
+
+function runRoulette(items, totalWeight, winner, onDone) {
+  const wrap = document.getElementById('roulette-wrap');
+  const strip = document.getElementById('roulette-strip');
+  wrap.style.display = 'block';
+
+  const CELL_COUNT = 60;
+  const WIN_INDEX = 50;
+  const CELL_W = 92 + 12; // width + margins
+
+  const cellsHtml = [];
+  for (let i = 0; i < CELL_COUNT; i++) {
+    const it = i === WIN_INDEX ? winner : pickWeightedClient(items);
+    cellsHtml.push(`
+      <div class="roulette-cell ${rarityOf(it, totalWeight)}" data-idx="${i}">
+        <div class="rc-icon">${svgIcon(KIND_ICON[it.kind] || 'coin', 24)}</div>
+      </div>`);
+  }
+  strip.innerHTML = cellsHtml.join('');
+  strip.style.transition = 'none';
+  strip.style.transform = 'translateX(0px)';
+
+  const viewportWidth = wrap.querySelector('.roulette-viewport').clientWidth;
+  const jitter = (Math.random() - 0.5) * (CELL_W * 0.5);
+  const targetX = -(WIN_INDEX * CELL_W + CELL_W / 2 - viewportWidth / 2) + jitter;
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      strip.style.transition = 'transform 4.2s cubic-bezier(0.1,0.83,0.15,1)';
+      strip.style.transform = `translateX(${targetX}px)`;
+    });
+  });
+
+  setTimeout(() => {
+    const winCell = strip.querySelector(`.roulette-cell[data-idx="${WIN_INDEX}"]`);
+    if (winCell) winCell.classList.add('win');
+    setTimeout(onDone, 700);
+  }, 4300);
+}
+
+function launchConfetti() {
+  const canvas = document.createElement('canvas');
+  canvas.className = 'confetti-canvas';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const colors = ['#ff9b19', '#ff670b', '#ffd27a', '#4ee89b', '#3fd8ff', '#ff2fb0'];
+  const particles = Array.from({ length: 140 }, () => ({
+    x: canvas.width / 2 + (Math.random() - 0.5) * 60,
+    y: canvas.height * 0.4 + (Math.random() - 0.5) * 40,
+    vx: (Math.random() - 0.5) * 14,
+    vy: Math.random() * -14 - 4,
+    size: Math.random() * 5 + 3,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    rotation: Math.random() * Math.PI * 2,
+    spin: (Math.random() - 0.5) * 0.3,
+  }));
+  const start = performance.now();
+  function frame(now) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const p of particles) {
+      p.vy += 0.32;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rotation += p.spin;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+      ctx.restore();
+    }
+    if (now - start < 1800) requestAnimationFrame(frame);
+    else canvas.remove();
+  }
+  requestAnimationFrame(frame);
+}
+
+function showResult(item, isError) {
+  document.getElementById('result-icon').innerHTML = svgIcon(isError ? 'frown' : 'trophy', 40, {
+    color: isError ? '#ff8a8a' : '#ff9fe0',
+    strokeWidth: 1.6,
+  });
+  document.getElementById('result-title').textContent = item.title;
+  document.getElementById('result-desc').textContent = item.desc
+    ? item.desc
+    : isError ? 'Попробуйте ещё раз.' : rewardText(item);
+  const overlay = document.getElementById('result-overlay');
+  const card = overlay.querySelector('.result-card');
+  overlay.classList.remove('lose');
+  card.classList.remove('lose');
+  overlay.classList.add('show');
+  if (isError) {
+    void overlay.offsetWidth; // restart the shake/flash animation on repeated losses
+    overlay.classList.add('lose');
+    card.classList.add('lose');
+  } else {
+    launchConfetti();
+  }
+}
+document.getElementById('result-close').addEventListener('click', () => {
+  const overlay = document.getElementById('result-overlay');
+  overlay.classList.remove('show', 'lose');
+  overlay.querySelector('.result-card').classList.remove('lose');
+  renderCabinet();
+  if (activeCase) openCaseModal(activeCase.c.key);
+  else if (activeUpgrade) renderUpgradeTab();
+  else document.getElementById('case-modal').classList.remove('show');
+});
+
+// --- Круг апгрейдера: subscription-upgrade gauge ---
+
+function daysUntil(sqlDate) {
+  const ms = new Date(sqlDate.replace(' ', 'T') + 'Z').getTime() - Date.now();
+  return Math.max(1, Math.ceil(ms / 86400000));
+}
+
+function daysWord(n) {
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'день';
+  if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return 'дня';
+  return 'дней';
+}
+
+function ugArcParts(chance) {
+  const half = chance * 1.8; // % of 360°, split evenly either side of the bottom (180°)
+  return { half, start: 180 - half, end: 180 + half };
+}
+
+function ugGaugeSvg() {
+  return `
+    <svg viewBox="0 0 440 440" role="img" aria-label="Круг апгрейдера" style="display:block;width:100%;height:100%;">
+      <defs>
+        <linearGradient id="ug-orange" x1="0" y1="0" x2="0" y2="1">
+          <stop stop-color="#ff9b19"/><stop offset=".55" stop-color="#ff670b"/><stop offset="1" stop-color="#d84008"/>
+        </linearGradient>
+      </defs>
+      <circle cx="220" cy="220" r="171" fill="#080b0f" stroke="#050609" stroke-width="15"/>
+      <circle cx="220" cy="220" r="183" fill="none" stroke="#303742" stroke-width="28"/>
+      <circle id="ug-arc" cx="220" cy="220" r="183" fill="none" stroke="url(#ug-orange)" stroke-width="28" pathLength="100" stroke-linecap="round"/>
+      <circle cx="220" cy="220" r="131" fill="none" stroke="#171d24" stroke-width="12"/>
+      <path d="M138 237l37-58 43 27 59-15 38 38-61 21-32 38-25-28z" fill="none" stroke="#d9660e" stroke-width="7" opacity=".82"/>
+      <path d="M167 198l94 46-48 9 27 30M194 215l-16 56M256 212l-42 41 67-19" fill="none" stroke="#f07912" stroke-width="4" stroke-linecap="round"/>
+      <g id="ug-needle" class="ug-needle">
+        <polygon points="220,42 239,82 220,111 201,82" fill="#ff6810" stroke="#ffbc38" stroke-width="2" style="filter:drop-shadow(0 4px 5px #000c);"/>
+        <polygon points="220,50 232,81 220,101" fill="#ffd15c" opacity=".6"/>
+      </g>
+    </svg>`;
+}
+
+function ugApplyArc(chance) {
+  const { half } = ugArcParts(chance);
+  const arc = document.getElementById('ug-arc');
+  arc.setAttribute('stroke-dasharray', `${chance} ${100 - chance}`);
+  arc.setAttribute('transform', `rotate(${90 - half} 220 220)`);
+}
+
+async function renderUpgradeTab() {
+  const el = document.getElementById('view-upgrade');
+  el.innerHTML = '<div class="card muted">Загрузка…</div>';
+  let me, status;
+  try {
+    [me, status] = await Promise.all([api('/api/app/me'), fetch('/api/status').then((r) => r.json())]);
+  } catch {
+    el.innerHTML = '<div class="card muted">Откройте раздел из бота TOKYO VPN.</div>';
+    return;
+  }
+
+  const multipliers = status.upgradeMultipliers;
+  const daysNow = me.subscription ? daysUntil(me.subscription.expiresAt) : 0;
+  const coinsNow = me.coins;
+  const maxByType = { days: daysNow, coins: coinsNow };
+
+  if (daysNow <= 0 && coinsNow <= 0) {
+    el.innerHTML = '<div class="card muted">Нужна активная подписка или монеты, чтобы играть в апгрейд.</div>';
+    return;
+  }
+
+  const firstMult = Number(Object.keys(multipliers)[0]);
+  const keepType = activeUpgrade && maxByType[activeUpgrade.stakeType] > 0 ? activeUpgrade.stakeType : (daysNow > 0 ? 'days' : 'coins');
+  activeUpgrade = {
+    multiplier: multipliers[5] ? 5 : firstMult,
+    stakeType: keepType,
+    stakeAmount: Math.max(1, Math.ceil(maxByType[keepType] / 2)),
+    spinning: false,
+  };
+
+  el.innerHTML = `
+    <div class="ug-panel">
+      <div class="ug-eyebrow"><span>Апгрейд подписки</span><span class="ug-live">вращение активно</span></div>
+      <div class="ug-sub-row">
+        <span style="font-size:12.5px;color:#89919d;">Доступно</span>
+        <span style="font-size:15px;font-weight:800;">${daysNow} ${daysWord(daysNow)} · ${coinsNow} монет</span>
+      </div>
+
+      <div class="ug-stake-toggle" id="ug-stake-toggle">
+        <div class="ug-stake-btn" data-type="days" ${daysNow <= 0 ? 'style="opacity:.4;pointer-events:none;"' : ''}>${svgIcon('shieldCheck', 14)} Дни подписки</div>
+        <div class="ug-stake-btn" data-type="coins" ${coinsNow <= 0 ? 'style="opacity:.4;pointer-events:none;"' : ''}>${svgIcon('coin', 14)} Монеты</div>
+      </div>
+
+      <div class="ug-slider-row">
+        <div class="ug-slider-label"><span>Ставка</span><b id="ug-stake-value"></b></div>
+        <input type="range" class="ug-slider" id="ug-stake-slider" min="1" step="1">
+      </div>
+
+      <div class="ug-mult-grid" id="ug-mult-grid">
+        ${Object.entries(multipliers).map(([m, chance]) => `
+          <div class="ug-mult-btn" data-mult="${m}">
+            <div class="ug-mult-val">×${m}</div>
+            <div class="ug-mult-chance">${chance}%</div>
+          </div>`).join('')}
+      </div>
+      <div class="ug-gauge-wrap">
+        ${ugGaugeSvg()}
+        <div class="ug-center"><div class="ug-percent" id="ug-percent"></div><div class="ug-caption" id="ug-caption"></div></div>
+      </div>
+      <div class="ug-outcome">
+        <div style="text-align:center;"><div style="font-size:15px;font-weight:800;" id="ug-stake-preview"></div><div style="font-size:10px;color:#89919d;margin-top:2px;">на кону</div></div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6c7482" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        <div style="text-align:center;"><div style="font-size:16px;font-weight:800;background:linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008);-webkit-background-clip:text;background-clip:text;color:transparent;" id="ug-after"></div><div style="font-size:10px;color:#89919d;margin-top:2px;">при удаче</div></div>
+      </div>
+      <button class="ug-cta" id="ug-cta"></button>
+      <div class="ug-hint">Если спин неудачный — поставленное сгорает. Играй осознанно.</div>
+      <a class="ug-fair-link" href="/fair-play.html" target="_blank" rel="noopener">Условия честной игры и реальные шансы →</a>
+    </div>`;
+
+  document.querySelectorAll('#ug-stake-toggle .ug-stake-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (activeUpgrade.spinning || maxByType[btn.dataset.type] <= 0) return;
+      activeUpgrade.stakeType = btn.dataset.type;
+      activeUpgrade.stakeAmount = Math.max(1, Math.ceil(maxByType[btn.dataset.type] / 2));
+      ugRenderSelection(multipliers, maxByType);
+    });
+  });
+
+  document.getElementById('ug-stake-slider').addEventListener('input', (e) => {
+    activeUpgrade.stakeAmount = Number(e.target.value);
+    ugRenderSelection(multipliers, maxByType);
+  });
+
+  document.querySelectorAll('#ug-mult-grid .ug-mult-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (activeUpgrade.spinning) return;
+      activeUpgrade.multiplier = Number(btn.dataset.mult);
+      ugRenderSelection(multipliers, maxByType);
+    });
+  });
+
+  ugRenderSelection(multipliers, maxByType);
+}
+
+function ugRenderSelection(multipliers, maxByType) {
+  const { multiplier, stakeType } = activeUpgrade;
+  const max = Math.max(1, maxByType[stakeType]);
+  const chance = multipliers[multiplier];
+
+  document.querySelectorAll('#ug-stake-toggle .ug-stake-btn').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.type === stakeType);
+  });
+
+  const slider = document.getElementById('ug-stake-slider');
+  slider.max = String(max);
+  activeUpgrade.stakeAmount = Math.min(Math.max(1, activeUpgrade.stakeAmount), max);
+  slider.value = String(activeUpgrade.stakeAmount);
+  const unit = (n) => (stakeType === 'days' ? daysWord(n) : 'монет');
+  document.getElementById('ug-stake-value').textContent = `${activeUpgrade.stakeAmount} ${unit(activeUpgrade.stakeAmount)}`;
+
+  document.querySelectorAll('#ug-mult-grid .ug-mult-btn').forEach((btn) => {
+    btn.classList.toggle('active', Number(btn.dataset.mult) === multiplier);
+  });
+  document.getElementById('ug-percent').textContent = `${chance.toFixed(2)}%`;
+  document.getElementById('ug-caption').textContent = `Шанс на ×${multiplier}`;
+  document.getElementById('ug-stake-preview').textContent = `${activeUpgrade.stakeAmount} ${unit(activeUpgrade.stakeAmount)}`;
+  const afterAmount = activeUpgrade.stakeAmount * multiplier;
+  document.getElementById('ug-after').textContent = `${afterAmount} ${unit(afterAmount)}`;
+  const cta = document.getElementById('ug-cta');
+  cta.disabled = false;
+  cta.textContent = `Улучшить на ×${multiplier}`;
+  cta.onclick = () => startUpgradeSpin(multipliers, maxByType);
+  ugApplyArc(chance);
+  const needle = document.getElementById('ug-needle');
+  needle.style.transition = 'none';
+  needle.style.transform = 'rotate(0deg)';
+}
+
+async function startUpgradeSpin(multipliers, maxByType) {
+  if (!activeUpgrade || activeUpgrade.spinning) return;
+  activeUpgrade.spinning = true;
+  document.getElementById('ug-cta').disabled = true;
+  document.querySelectorAll('#ug-mult-grid .ug-mult-btn').forEach((b) => (b.style.pointerEvents = 'none'));
+  document.querySelectorAll('#ug-stake-toggle .ug-stake-btn').forEach((b) => (b.style.pointerEvents = 'none'));
+  document.getElementById('ug-stake-slider').disabled = true;
+
+  const { multiplier, stakeType, stakeAmount } = activeUpgrade;
+  let result;
+  try {
+    result = await api('/api/app/upgrade', { method: 'POST', body: JSON.stringify({ multiplier, stakeType, stakeAmount }) });
+  } catch (e) {
+    activeUpgrade.spinning = false;
+    document.getElementById('ug-cta').disabled = false;
+    document.querySelectorAll('#ug-mult-grid .ug-mult-btn').forEach((b) => (b.style.pointerEvents = ''));
+    document.querySelectorAll('#ug-stake-toggle .ug-stake-btn').forEach((b) => (b.style.pointerEvents = ''));
+    document.getElementById('ug-stake-slider').disabled = false;
+    showResult({ title: 'Не получилось', desc: 'Попробуйте ещё раз чуть позже.' }, true);
+    return;
+  }
+
+  const { half, start, end } = ugArcParts(result.chance);
+  let landing;
+  if (result.win) {
+    landing = 180 + (Math.random() - 0.5) * half * 1.2;
+  } else {
+    const safeSpan = 360 - (end - start) - 16;
+    landing = (end + 8 + Math.random() * safeSpan) % 360;
+  }
+  const needle = document.getElementById('ug-needle');
+  needle.style.transition = 'transform 3.4s cubic-bezier(.13,.7,.18,1)';
+  needle.style.transform = `rotate(${5 * 360 + landing}deg)`;
+
+  setTimeout(() => {
+    activeUpgrade.spinning = false;
+    const unit = result.stakeType === 'days' ? daysWord(result.stakeAmount) : 'монет';
+    if (result.win) {
+      showResult({ title: 'Апгрейд удался!', desc: `${result.stakeAmount} → ${result.resultAmount} ${unit}` });
+    } else {
+      const lost = result.stakeType === 'days' ? 'Дни подписки сгорели.' : 'Монеты сгорели.';
+      showResult({ title: 'Апгрейд не удался', desc: `${lost} Оформите подписку или зарабатывайте монеты в кейсах.` }, true);
+    }
+  }, 3500);
+}
+
+function switchTab(name) {
+  document.getElementById('tab-cabinet').classList.toggle('active', name === 'cabinet');
+  document.getElementById('tab-subs').classList.toggle('active', name === 'subs');
+  document.getElementById('tab-cases').classList.toggle('active', name === 'cases');
+  document.getElementById('tab-upgrade').classList.toggle('active', name === 'upgrade');
+  document.getElementById('view-cabinet').style.display = name === 'cabinet' ? '' : 'none';
+  document.getElementById('view-subs').style.display = name === 'subs' ? '' : 'none';
+  document.getElementById('view-cases').style.display = name === 'cases' ? '' : 'none';
+  document.getElementById('view-upgrade').style.display = name === 'upgrade' ? '' : 'none';
+  if (name === 'cases') renderCases();
+  if (name === 'subs') renderSubs();
+  if (name === 'upgrade') renderUpgradeTab();
+}
+document.getElementById('tab-cabinet').addEventListener('click', () => switchTab('cabinet'));
+document.getElementById('tab-subs').addEventListener('click', () => switchTab('subs'));
+document.getElementById('tab-cases').addEventListener('click', () => switchTab('cases'));
+document.getElementById('tab-upgrade').addEventListener('click', () => switchTab('upgrade'));
+
+const tabParam = new URLSearchParams(location.search).get('tab');
+const initialTab = tabParam === 'cases' ? 'cases' : tabParam === 'subs' ? 'subs' : tabParam === 'upgrade' ? 'upgrade' : 'cabinet';
+switchTab(initialTab);
+renderCabinet();
+</script>
+</body>
+</html>

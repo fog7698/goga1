@@ -1,0 +1,16 @@
+{
+  "name": "bloom-vpn-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.19.2",
+    "grammy": "^1.30.0",
+    "http-proxy": "^1.18.1"
+  }
+}
