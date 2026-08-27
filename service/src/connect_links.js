@@ -30,7 +30,8 @@ async function happConnectLink(subscriptionUrl) {
   }
 }
 
-const PUBLIC_URL = process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : '';
+const PUBLIC_DOMAIN = process.env.PUBLIC_DOMAIN || process.env.RAILWAY_PUBLIC_DOMAIN || '';
+const PUBLIC_URL = PUBLIC_DOMAIN ? `https://${PUBLIC_DOMAIN}` : '';
 
 /** Telegram inline-keyboard buttons and Mini App `tg.openLink` both silently reject/drop
  * anything that isn't http(s) - a happ:// or vless:// button either fails to send (Telegram

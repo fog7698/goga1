@@ -19,7 +19,7 @@ const OWNER_UUID = process.env.VPN_UUID;
 // this: it rides ordinary-looking HTTP/2 POST/GET request/response bodies with no
 // `Upgrade: websocket` header at all, so there's no upgrade handshake for DPI to fingerprint.
 const TUNNEL_PATH = process.env.VPN_WS_PATH || '/xr-e6f2a9c1';
-const PUBLIC_DOMAIN = process.env.RAILWAY_PUBLIC_DOMAIN || '';
+const PUBLIC_DOMAIN = process.env.PUBLIC_DOMAIN || process.env.RAILWAY_PUBLIC_DOMAIN || '';
 
 let child = null;
 let restarting = false;

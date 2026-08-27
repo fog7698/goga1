@@ -23,7 +23,7 @@ async function main() {
 
   // 3. Web (public site + admin + webhooks) — same port the old subscription server used.
   const app = createApp(bot ? bot.api : null);
-  const PORT = process.env.WEB_PORT || 8080;
+  const PORT = process.env.WEB_PORT || process.env.PORT || 8080;
   app.listen(PORT, () => console.log(`[web] listening on :${PORT}`));
 
   // 4. Expiry sweep every 5 minutes.

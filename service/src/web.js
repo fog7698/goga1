@@ -13,7 +13,8 @@ const channelGate = require('./channel_gate');
 const { requireTelegram } = require('./telegram_auth');
 const { onSubscriptionsChanged } = require('./sync');
 
-const PUBLIC_URL = process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : '';
+const PUBLIC_DOMAIN = process.env.PUBLIC_DOMAIN || process.env.RAILWAY_PUBLIC_DOMAIN || '';
+const PUBLIC_URL = PUBLIC_DOMAIN ? `https://${PUBLIC_DOMAIN}` : '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || crypto.randomBytes(6).toString('hex');
 if (!process.env.ADMIN_PASSWORD) {
   console.log(`[admin] No ADMIN_PASSWORD set - generated one for this boot: ${ADMIN_PASSWORD}`);
