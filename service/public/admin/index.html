@@ -160,8 +160,12 @@
   </div>
 
   <div class="panel">
-    <div class="panel-head"><h3>Скины CS2</h3></div>
-    <div class="user-hint">Каталог скинов, доступных для кейсов за дни и апгрейда. Кнопка «Обновить со Steam» подтягивает и цену, и реальное фото предмета с Steam Market (по одному скину за раз — Steam жёстко лимитирует частые запросы); пока фото не подтянуто, на сайте показывается цветная карточка-заглушка с силуэтом оружия.</div>
+    <div class="panel-head">
+      <h3>Скины CS2</h3>
+      <button class="row-btn" id="sk-refresh-all">Обновить всё со Steam</button>
+    </div>
+    <div class="user-hint">Каталог скинов, доступных для кейсов за дни и апгрейда. Кнопка «Обновить со Steam» на строке подтягивает цену и реальное фото для одного скина; «Обновить всё со Steam» вверху проходит по всему каталогу в фоне (несколько минут — Steam жёстко лимитирует частые запросы). Часть автосгенерированных названий (сочетание скина и степени износа) не существует на Steam - для них при обновлении перебираются другие степени износа того же скина; если ни одна не находится, цена/фото остаются как есть, показывается цветная карточка-заглушка.</div>
+    <div class="user-hint" id="sk-refresh-all-status"></div>
     <div class="skin-form">
       <input id="sk-name" placeholder="market_hash_name (как в Steam)" style="min-width:260px">
       <input id="sk-image" placeholder="Ссылка на картинку (необязательно)" style="min-width:220px">
@@ -696,6 +700,41 @@ document.getElementById('sk-create').addEventListener('click', async () => {
     loadSkins();
   } catch (e) { alert('Не получилось добавить (имя уже занято?)'); }
 });
+
+let skRefreshAllTimer = null;
+
+function renderBulkStatus(s) {
+  const el = document.getElementById('sk-refresh-all-status');
+  const btn = document.getElementById('sk-refresh-all');
+  if (!s.startedAt) { el.textContent = ''; btn.disabled = false; return; }
+  if (s.running) {
+    el.textContent = `Обновляю каталог со Steam: ${s.done}/${s.total}${s.fixedNames ? `, исправлено названий: ${s.fixedNames}` : ''}…`;
+    btn.disabled = true;
+  } else {
+    el.textContent = `Готово: обновлено ${s.done}/${s.total}, исправлено названий: ${s.fixedNames} (${s.finishedAt}).`;
+    btn.disabled = false;
+    if (skRefreshAllTimer) { clearInterval(skRefreshAllTimer); skRefreshAllTimer = null; }
+    loadSkins();
+  }
+}
+
+async function pollBulkStatus() {
+  const s = await api('/admin/api/skins/refresh-all');
+  renderBulkStatus(s);
+}
+
+document.getElementById('sk-refresh-all').addEventListener('click', async () => {
+  try {
+    await api('/admin/api/skins/refresh-all', { method: 'POST' });
+  } catch (e) {
+    alert('Уже выполняется или не получилось запустить.');
+    return;
+  }
+  if (skRefreshAllTimer) clearInterval(skRefreshAllTimer);
+  skRefreshAllTimer = setInterval(pollBulkStatus, 3000);
+  pollBulkStatus();
+});
+pollBulkStatus();
 
 // --- Заявки на вывод ---
 

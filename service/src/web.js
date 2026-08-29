@@ -712,6 +712,17 @@ function createApp(botApi) {
     res.json({ ok: true, skin: result.skin });
   });
 
+  // Walks the whole catalog in the background (rate-limit-safe delay between items) - starts and
+  // returns immediately rather than blocking the request for the several minutes a full pass
+  // takes; poll GET .../refresh-all for progress.
+  app.post('/admin/api/skins/refresh-all', (_req, res) => {
+    const result = skins.refreshAllSkins();
+    if (result.error) return res.status(409).json(result);
+    res.json(result);
+  });
+
+  app.get('/admin/api/skins/refresh-all', (_req, res) => res.json(skins.getBulkRefreshState()));
+
   // --- Steam withdrawal queue ---
 
   app.get('/admin/api/withdrawals', (req, res) => res.json(inventory.listWithdrawals(req.query.status)));
