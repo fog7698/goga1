@@ -14,8 +14,8 @@ function printBootLinks() {
 }
 
 async function main() {
-  // 1. Bring xray up with whatever is currently active in the DB.
-  xray.startXray(subs.activeClientUuids());
+  // 1. The VPN tunnel (xray) runs on its own VPS now, not here - see xray.js. It pulls its
+  // client list from /internal/vpn-clients on its own schedule.
   printBootLinks();
 
   // 2. Telegram bot (no-ops if BOT_TOKEN is unset).
@@ -26,13 +26,9 @@ async function main() {
   const PORT = process.env.WEB_PORT || process.env.PORT || 8080;
   app.listen(PORT, () => console.log(`[web] listening on :${PORT}`));
 
-  // 4. Expiry sweep every 5 minutes.
+  // 4. Expiry sweep every 5 minutes - the VPN VPS picks up the change on its next poll.
   setInterval(() => {
-    if (subs.sweepExpired()) {
-      console.log('[subs] some subscriptions expired - refreshing xray clients');
-      const { onSubscriptionsChanged } = require('./sync');
-      onSubscriptionsChanged();
-    }
+    subs.sweepExpired();
   }, 5 * 60 * 1000);
 
   if (bot) {

@@ -9,7 +9,8 @@ const { onSubscriptionsChanged } = require('./sync');
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const SUPPORT_CONTACT = process.env.SUPPORT_CONTACT || '@tokyo_vpn_support';
-const PUBLIC_URL = process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : '';
+const PUBLIC_DOMAIN = process.env.PUBLIC_DOMAIN || process.env.RAILWAY_PUBLIC_DOMAIN || '';
+const PUBLIC_URL = PUBLIC_DOMAIN ? `https://${PUBLIC_DOMAIN}` : '';
 const CABINET_URL = PUBLIC_URL ? `${PUBLIC_URL}/app/` : null;
 const CASES_URL = PUBLIC_URL ? `${PUBLIC_URL}/app/?tab=cases` : null;
 

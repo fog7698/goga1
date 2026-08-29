@@ -1,10 +1,9 @@
 #!/bin/sh
 set -e
 
-# xray runs plain VLESS-over-WebSocket now (no REALITY, no x25519 keypair) - Railway's raw TCP
-# Proxy silently drops this project's handshakes, so TLS is terminated at Railway's own HTTPS
-# edge instead and forwarded to xray as a local WebSocket upgrade. Only the owner's client uuid
-# still needs to persist across restarts.
+# The VPN tunnel (xray) runs on its own VPS now, not in this container - see service/src/xray.js.
+# VPN_UUID still identifies the owner's client uuid in the links this app generates, and needs to
+# persist across restarts.
 if [ -z "$VPN_UUID" ]; then
   VPN_UUID="$(cat /proc/sys/kernel/random/uuid)"
   echo "=================================================================="
