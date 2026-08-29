@@ -161,7 +161,7 @@
 
   <div class="panel">
     <div class="panel-head"><h3>Скины CS2</h3></div>
-    <div class="user-hint">Каталог скинов, доступных для кейсов за дни и апгрейда. Цену можно ввести вручную или подтянуть со Steam Market кнопкой «Обновить цену» (запрос идёт по одному скину за раз — Steam жёстко лимитирует частые запросы).</div>
+    <div class="user-hint">Каталог скинов, доступных для кейсов за дни и апгрейда. Кнопка «Обновить со Steam» подтягивает и цену, и реальное фото предмета с Steam Market (по одному скину за раз — Steam жёстко лимитирует частые запросы); пока фото не подтянуто, на сайте показывается цветная карточка-заглушка с силуэтом оружия.</div>
     <div class="skin-form">
       <input id="sk-name" placeholder="market_hash_name (как в Steam)" style="min-width:260px">
       <input id="sk-image" placeholder="Ссылка на картинку (необязательно)" style="min-width:220px">
@@ -649,7 +649,7 @@ async function loadSkins() {
       <td><input type="checkbox" class="sk-upgrade" ${s.available_for_upgrade ? 'checked' : ''}></td>
       <td>
         <button class="row-btn sk-save">Сохр.</button>
-        <button class="row-btn sk-refresh">Steam-цена</button>
+        <button class="row-btn sk-refresh">Обновить со Steam</button>
         <button class="row-btn sk-del">Удалить</button>
       </td>
     </tr>`).join('');

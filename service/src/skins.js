@@ -17,13 +17,33 @@ async function fetchSteamPrice(marketHashName) {
   if (!data || !data.success) return null;
   const raw = data.lowest_price || data.median_price;
   if (!raw) return null;
-  // "15,50 pуб." / "1 234,50 руб." -> 1234.50
-  const cleaned = String(raw)
-    .replace(/[^\d.,]/g, '')
-    .replace(/\.(?=\d{3}(?:\D|$))/g, '')
-    .replace(',', '.');
+  // "15,50 pуб." / "1 234,50 руб." -> 1234.50. Match only the leading numeric run (digits, the
+  // thousands-separator spaces, one decimal separator) so the currency suffix - including its
+  // own trailing "." in "руб." - never leaks into the parsed number.
+  const numeric = String(raw).match(/^[\d\s.,]+/);
+  if (!numeric) return null;
+  const cleaned = numeric[0].trim().replace(/\s+/g, '').replace(',', '.');
   const price = Number(cleaned);
   return Number.isFinite(price) && price > 0 ? price : null;
+}
+
+/** The item's real photo, scraped off its public Steam Market listing page's `og:image` meta tag
+ * - same no-key/rate-limited caveat as fetchSteamPrice. Simpler and more reliable than Steam's
+ * old /render?format=json asset payload, which their current market UI no longer serves (it
+ * answers with the page's HTML shell even when format=json is requested). Returns null on any
+ * failure (network, rate limit, unknown item, no og:image found). */
+async function fetchSteamIcon(marketHashName) {
+  const url = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(marketHashName)}`;
+  let res;
+  try {
+    res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  } catch {
+    return null;
+  }
+  if (!res.ok) return null;
+  const html = await res.text().catch(() => '');
+  const match = html.match(/<meta property="og:image" content="([^"]+)"/);
+  return match ? match[1] : null;
 }
 
 function listSkins() {
@@ -67,14 +87,27 @@ function deleteSkin(id) {
   db.prepare('DELETE FROM skins WHERE id = ?').run(id);
 }
 
-/** Refresh one skin's price from Steam Market; leaves the stored price untouched if Steam
- * doesn't answer (rate limit, unknown name) rather than zeroing it out. */
+/** Refresh one skin's price AND real photo from Steam Market in one admin-triggered action;
+ * leaves whichever field Steam didn't answer for (rate limit, unknown name) untouched rather
+ * than zeroing it out. */
 async function refreshSkinPrice(id) {
   const skin = getSkin(id);
   if (!skin) return { error: 'not_found' };
-  const price = await fetchSteamPrice(skin.market_hash_name);
-  if (price == null) return { error: 'steam_unavailable', skin };
-  return { skin: updateSkin(id, { priceRub: price }) };
+  const [price, iconUrl] = await Promise.all([
+    fetchSteamPrice(skin.market_hash_name),
+    fetchSteamIcon(skin.market_hash_name),
+  ]);
+  if (price == null && iconUrl == null) return { error: 'steam_unavailable', skin };
+  return { skin: updateSkin(id, { priceRub: price, imageUrl: iconUrl }) };
 }
 
-module.exports = { fetchSteamPrice, listSkins, getSkin, createSkin, updateSkin, deleteSkin, refreshSkinPrice };
+module.exports = {
+  fetchSteamPrice,
+  fetchSteamIcon,
+  listSkins,
+  getSkin,
+  createSkin,
+  updateSkin,
+  deleteSkin,
+  refreshSkinPrice,
+};

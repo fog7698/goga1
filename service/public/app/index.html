@@ -171,33 +171,41 @@
   .ug-eyebrow { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 4px; color: #9da5b1; font-size: 11px; font-weight: bold; letter-spacing: 1.4px; text-transform: uppercase; }
   .ug-live { color: #58d78e; letter-spacing: normal; text-transform: none; }
   .ug-live:before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: #58d78e; box-shadow: 0 0 10px #58d78e; }
-  .ug-sub-row { display: flex; align-items: baseline; justify-content: space-between; margin: 10px 2px 16px; padding-bottom: 14px; border-bottom: 1px solid #2a313c; color: #fff; }
-  .ug-mult-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
-  .ug-mult-btn { text-align: center; padding: 9px 4px; border-radius: 10px; border: 1px solid #4d5663; background: #29313c; cursor: pointer; color: #fff; }
-  .ug-mult-btn.active { border-color: transparent; background: linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008); box-shadow: 0 8px 18px -6px rgba(255,103,11,.4); }
-  .ug-mult-val { font-size: 15px; font-weight: 800; }
-  .ug-mult-chance { font-size: 10.5px; font-weight: 700; margin-top: 3px; color: #8fd98f; }
-  .ug-mult-btn.active .ug-mult-chance { color: #fff0dc; }
   .ug-gauge-wrap { position: relative; width: min(100%, 320px); margin: 0 auto; aspect-ratio: 1; }
   .ug-needle { transform-origin: 220px 220px; transform: rotate(0deg); }
   .ug-center { position: absolute; inset: 0; display: grid; place-content: center; align-content: center; gap: 6px; text-align: center; pointer-events: none; }
   .ug-percent { font-size: clamp(30px, 8vw, 42px); font-weight: 800; letter-spacing: -2px; color: #fff; text-shadow: 0 3px 10px #000; }
   .ug-caption { font-size: 14px; font-weight: 700; color: #fff; text-shadow: 0 2px 8px #000; }
-  .ug-outcome { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 14px 0 16px; color: #fff; }
   .ug-cta { width: 100%; padding: 13px; border-radius: 12px; background: linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008); color: #fff; font-weight: 800; font-size: 14px; text-align: center; border: none; cursor: pointer; box-shadow: 0 14px 26px -10px rgba(255,103,11,.33); }
   .ug-cta:disabled { opacity: .5; }
   .ug-hint { margin: 14px auto 0; max-width: 310px; color: #89919d; font-size: 11.5px; line-height: 1.45; text-align: center; }
   .ug-fair-link { display: block; text-align: center; margin-top: 8px; font-size: 11px; color: #6c9fd9; text-decoration: underline; }
 
-  .ug-stake-toggle { display: flex; gap: 8px; margin: 4px 0 14px; }
-  .ug-stake-btn { flex: 1; text-align: center; padding: 9px 4px; border-radius: 10px; border: 1px solid #4d5663; background: #29313c; cursor: pointer; color: #cfd4db; font-size: 12.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; }
-  .ug-stake-btn.active { border-color: transparent; background: linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008); color: #fff; }
-  .ug-slider-row { margin-bottom: 16px; }
-  .ug-slider-label { display: flex; justify-content: space-between; font-size: 12px; color: #c7ccd3; margin-bottom: 8px; }
-  .ug-slider-label b { color: #fff; font-size: 14px; }
   .ug-slider { width: 100%; -webkit-appearance: none; appearance: none; height: 6px; border-radius: 999px; background: #303742; outline: none; }
   .ug-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008); border: 2px solid #fff; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
   .ug-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008); border: 2px solid #fff; cursor: pointer; }
+
+  .ug-slot-row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .ug-slot { flex: 1; min-width: 0; min-height: 104px; border-radius: 14px; background: #1b212a; border: 1px dashed #3a4149; padding: 10px; text-align: center; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ug-slot.filled { border-style: solid; border-color: #4d5663; }
+  .ug-slot-label { font-size: 10px; color: #9da5b1; text-transform: uppercase; letter-spacing: .06em; position: absolute; top: 8px; left: 10px; }
+  .ug-slot-empty { color: #6c7482; font-size: 11.5px; margin-top: 10px; }
+  .ug-slot-name { font-size: 11px; color: #fff; margin-top: 6px; line-height: 1.25; }
+  .ug-slot-price { font-size: 12px; font-weight: 800; color: #ffd27a; margin-top: 2px; }
+  .ug-slot-remove { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+  .ug-picker-tabs { display: flex; gap: 8px; margin: 4px 0 10px; background: #1b212a; padding: 4px; border-radius: 10px; }
+  .ug-picker-tab { flex: 1; text-align: center; padding: 8px 6px; border-radius: 8px; font-size: 12px; font-weight: 700; color: #9da5b1; cursor: pointer; }
+  .ug-picker-tab.active { background: linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008); color: #fff; }
+  .ug-search { width: 100%; padding: 9px 12px; border-radius: 9px; border: 1px solid #3a4149; background: #1b212a; color: #f3f0fb; font-size: 12.5px; margin-bottom: 10px; }
+  .ug-item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; max-height: 260px; overflow-y: auto; }
+  .ug-item-card { cursor: pointer; border-radius: 12px; background: #1b212a; border: 1px solid #2a313c; padding: 8px; text-align: center; }
+  .ug-item-card.selected { border-color: #ff8a1f; box-shadow: 0 0 0 1px #ff8a1f; }
+  .ug-item-card img, .ug-item-card .ug-item-icon { width: 100%; height: 44px; object-fit: contain; }
+  .ug-item-card .ug-item-name { font-size: 10px; color: #d6cfec; margin-top: 5px; line-height: 1.2; min-height: 24px; }
+  .ug-item-card .ug-item-price { font-size: 10.5px; font-weight: 700; color: #ffd27a; margin-top: 2px; }
+  .ug-days-card { display: flex; flex-direction: column; }
+  .ug-days-card input[type=range] { width: 100%; margin-top: 6px; }
 
   .confetti-canvas { position: fixed; inset: 0; z-index: 45; pointer-events: none; }
   @keyframes result-shake { 10%, 90% { transform: translateX(-1px); } 20%, 80% { transform: translateX(2px); } 30%, 50%, 70% { transform: translateX(-5px); } 40%, 60% { transform: translateX(5px); } }
@@ -494,7 +502,7 @@ async function renderProfilePage() {
       <h2>Инвентарь · ${owned.length}</h2>
       ${owned.length ? `<div class="inv-grid">${owned.map((it) => `
         <div class="inv-card">
-          ${it.image_url ? `<img src="${it.image_url}" class="inv-img">` : `<div class="inv-img" style="display:flex;align-items:center;justify-content:center;">${svgIcon('gem', 28, { color: '#a89bcf' })}</div>`}
+          ${it.image_url ? `<img src="${it.image_url}" class="inv-img">` : skinCardHtml(it.display_name, 64)}
           <div class="inv-name">${it.display_name}</div>
           <div class="inv-price">${Math.round(it.price_rub_at_win).toLocaleString('ru-RU')} ₽</div>
           <button class="case-preview-btn inv-sell-btn" data-id="${it.id}" style="margin-top:6px;">Продать за дни</button>
@@ -809,7 +817,7 @@ const TIER_NAMES = ['RECON', 'PRIME', 'ELITE', 'COVERT'];
 const KIND_ICON = { days: 'shieldCheck', percent: 'ticketPercent', coins: 'coin' };
 let casesList = [];
 let activeCase = null; // { c, tierIdx, totalWeight, spinning }
-let activeUpgrade = null; // { multiplier, stakeType, stakeAmount, spinning }
+let activeUpgrade = null; // { stakeType, stakeAmount, stakeInventoryId, targetSkinId, pickerTab, search, spinning }
 
 function rewardText(item) {
   return item.kind === 'days' ? `+${item.value} дней подписки`
@@ -818,11 +826,50 @@ function rewardText(item) {
     : `+${item.value} монет`;
 }
 
+// No real Steam photos for procedurally-seeded skins (yet) - render a stylised weapon-category
+// card instead, colour-coded per skin name so the same skin always looks the same everywhere
+// (case grid, roulette, inventory, upgrader). A real `imageUrl` (admin-set or Steam-fetched)
+// always wins over this when present.
+const WEAPON_ICON_PATHS = {
+  pistol: '<rect x="3" y="10" width="13" height="4" rx="1.2"/><rect x="14" y="8" width="4" height="3.4" rx="1"/><rect x="6" y="14" width="3.4" height="6.5" rx="1"/>',
+  smg: '<rect x="4" y="10.4" width="14" height="3.6" rx="1.2"/><rect x="17" y="7.8" width="3.6" height="3.6" rx="1"/><rect x="8" y="14" width="3.2" height="6.5" rx="1"/>',
+  rifle: '<rect x="2" y="11" width="18" height="3" rx="1.2"/><rect x="18.5" y="8.8" width="3" height="3.2" rx="1"/><rect x="6" y="14" width="3.2" height="6.5" rx="1"/><rect x="0.5" y="12" width="3" height="3.6" rx="1"/>',
+  sniper: '<rect x="2" y="12" width="19.5" height="2.2" rx="1"/><circle cx="10" cy="9" r="2.2"/><rect x="6" y="14.2" width="3.2" height="6.5" rx="1"/>',
+  heavy: '<rect x="2" y="10" width="19" height="4.6" rx="1.5"/><rect x="7" y="15" width="4" height="6.2" rx="1"/><rect x="19.4" y="8.4" width="3" height="3.6" rx="1"/>',
+  knife: '<path d="M4 20 18 6a2 2 0 0 0 0-3 2 2 0 0 0-3 0L1 17z"/><path d="m4 20 3-3" fill="none" stroke-width="1.6"/>',
+  gloves: '<path d="M8 21h7a2 2 0 0 0 2-2v-6.2a2.3 2.3 0 0 0-4.6 0V11a1.4 1.4 0 0 0-2.8 0v.3a1.4 1.4 0 0 0-2.8 0V17a4 4 0 0 0 1.2 2.9z"/>',
+};
+function weaponCategory(name) {
+  const n = (name || '').toUpperCase();
+  if (n.startsWith('★')) return /GLOVE|WRAP|HAND/.test(n) ? 'gloves' : 'knife';
+  if (/AWP|SSG 08|SCAR-20|G3SG1/.test(n)) return 'sniper';
+  if (/NOVA|XM1014|MAG-7|SAWED-OFF|M249|NEGEV/.test(n)) return 'heavy';
+  if (/AK-47|M4A4|M4A1|GALIL|FAMAS|\bAUG\b|SG 553/.test(n)) return 'rifle';
+  if (/MP9|MAC-10|MP7|MP5|UMP|P90|BIZON/.test(n)) return 'smg';
+  return 'pistol';
+}
+function skinHue(name) {
+  let h = 7;
+  const s = name || '';
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h % 360;
+}
+function skinCardHtml(name, size) {
+  const hue = skinHue(name);
+  const cat = weaponCategory(name);
+  const iconSize = Math.round(size * 0.6);
+  return `<div class="ug-item-icon" style="width:${size}px;height:${size}px;margin:0 auto;flex:0 0 auto;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg, hsl(${hue},65%,30%), hsl(${hue},55%,12%));box-shadow:inset 0 0 ${Math.round(size * 0.3)}px -4px hsl(${hue},85%,55%);">
+    <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="hsl(${hue},85%,74%)">${WEAPON_ICON_PATHS[cat]}</svg>
+  </div>`;
+}
+
 function prizeIconHtml(item, size) {
-  if (item.kind === 'skin' && item.imageUrl) {
-    return `<img src="${item.imageUrl}" style="width:${size}px;height:${size}px;object-fit:contain;border-radius:6px;">`;
+  if (item.kind === 'skin') {
+    return item.imageUrl
+      ? `<img src="${item.imageUrl}" style="width:${size}px;height:${size}px;object-fit:contain;border-radius:6px;">`
+      : skinCardHtml(item.title, size);
   }
-  return svgIcon(item.kind === 'skin' ? 'gem' : (KIND_ICON[item.kind] || 'coin'), size);
+  return svgIcon(KIND_ICON[item.kind] || 'coin', size);
 }
 
 function rarityOf(item, totalWeight) {
@@ -1134,348 +1181,293 @@ function ugApplyArc(chance) {
   arc.setAttribute('transform', `rotate(${90 - half} 220 220)`);
 }
 
+// --- Апгрейд: one unified flow - stake days or an owned skin, aim at one chosen target skin.
+// Reuses the existing gauge/needle visual as-is; only the surrounding stake/target selection is new.
+
 async function renderUpgradeTab() {
   const el = document.getElementById('view-upgrade');
   el.innerHTML = '<div class="card muted">Загрузка…</div>';
-  let me, status;
+  let me, status, inv, catalog;
   try {
-    [me, status] = await Promise.all([api('/api/app/me'), fetch('/api/status').then((r) => r.json())]);
+    [me, status, inv, catalog] = await Promise.all([
+      api('/api/app/me'), fetch('/api/status').then((r) => r.json()), api('/api/app/inventory'), api('/api/app/skins'),
+    ]);
   } catch {
     el.innerHTML = '<div class="card muted">Откройте раздел из бота TOKYO VPN.</div>';
     return;
   }
 
-  const multipliers = status.upgradeMultipliers;
   const daysNow = me.subscription ? daysUntil(me.subscription.expiresAt) : 0;
-  const coinsNow = me.coins;
-  const maxByType = { days: daysNow, coins: coinsNow };
+  const dayPriceRub = status.dayPriceRub;
+  const ownedSkins = inv.items.filter((it) => it.status === 'owned');
+  const targets = catalog.skins;
 
-  if (daysNow <= 0 && coinsNow <= 0) {
-    el.innerHTML = '<div class="card muted">Нужна активная подписка или монеты, чтобы играть в апгрейд.</div><div id="ug-skin-section"></div>';
-    renderSkinUpgradeSection(daysNow, status.dayPriceRub, status.upgradeSkinChanceMin, status.upgradeSkinChanceMax);
+  if (daysNow <= 0 && !ownedSkins.length) {
+    el.innerHTML = '<div class="card muted">Нужны дни подписки или скин в инвентаре, чтобы играть в апгрейд.</div>';
+    return;
+  }
+  if (!targets.length) {
+    el.innerHTML = '<div class="card muted">Пока нет доступных целей для апгрейда.</div>';
     return;
   }
 
-  const firstMult = Number(Object.keys(multipliers)[0]);
-  const keepType = activeUpgrade && maxByType[activeUpgrade.stakeType] > 0 ? activeUpgrade.stakeType : (daysNow > 0 ? 'days' : 'coins');
+  const keepStakeType = activeUpgrade
+    && ((activeUpgrade.stakeType === 'days' && daysNow > 0)
+      || (activeUpgrade.stakeType === 'skin' && ownedSkins.some((x) => x.id === activeUpgrade.stakeInventoryId)))
+    ? activeUpgrade.stakeType
+    : (daysNow > 0 ? 'days' : 'skin');
   activeUpgrade = {
-    multiplier: multipliers[5] ? 5 : firstMult,
-    stakeType: keepType,
-    stakeAmount: Math.max(1, Math.ceil(maxByType[keepType] / 2)),
+    stakeType: keepStakeType,
+    stakeAmount: activeUpgrade?.stakeAmount ? Math.min(activeUpgrade.stakeAmount, Math.max(1, daysNow)) : Math.max(1, Math.ceil((daysNow || 1) / 4)),
+    stakeInventoryId: keepStakeType === 'skin' ? (activeUpgrade?.stakeInventoryId ?? ownedSkins[0]?.id ?? null) : null,
+    targetSkinId: activeUpgrade && targets.some((t) => t.id === activeUpgrade.targetSkinId) ? activeUpgrade.targetSkinId : null,
+    pickerTab: activeUpgrade?.pickerTab || 'stake',
+    search: '',
     spinning: false,
   };
 
+  function stakeSlotHtml() {
+    if (activeUpgrade.stakeType === 'skin') {
+      const it = ownedSkins.find((x) => x.id === activeUpgrade.stakeInventoryId);
+      if (!it) return `<div class="ug-slot"><div class="ug-slot-label">Ставка</div><div class="ug-slot-empty">Выберите ниже ↓</div></div>`;
+      return `<div class="ug-slot filled">
+        <div class="ug-slot-label">Ставка</div>
+        <button class="ug-slot-remove" id="ug-clear-stake">${svgIcon('x', 11)}</button>
+        ${it.image_url ? `<img src="${it.image_url}" style="width:44px;height:44px;object-fit:contain;">` : skinCardHtml(it.display_name, 44)}
+        <div class="ug-slot-name">${it.display_name}</div>
+        <div class="ug-slot-price">${it.price_rub_at_win.toFixed(2)} ₽</div>
+      </div>`;
+    }
+    return `<div class="ug-slot filled">
+      <div class="ug-slot-label">Ставка</div>
+      ${svgIcon('shieldCheck', 30, { color: '#ffd27a' })}
+      <div class="ug-slot-name">Дни подписки</div>
+      <div class="ug-slot-price" id="ug-stake-days-price">${activeUpgrade.stakeAmount} ${daysWord(activeUpgrade.stakeAmount)} ≈ ${(activeUpgrade.stakeAmount * dayPriceRub).toFixed(2)} ₽</div>
+      <input type="range" class="ug-slider" id="ug-stake-days-slider" min="1" max="${Math.max(1, daysNow)}" value="${activeUpgrade.stakeAmount}" style="margin-top:8px;">
+    </div>`;
+  }
+
+  function targetSlotHtml() {
+    const t = targets.find((s) => s.id === activeUpgrade.targetSkinId);
+    if (!t) return `<div class="ug-slot"><div class="ug-slot-label">Цель</div><div class="ug-slot-empty">Выберите ниже ↓</div></div>`;
+    return `<div class="ug-slot filled">
+      <div class="ug-slot-label">Цель</div>
+      <button class="ug-slot-remove" id="ug-clear-target">${svgIcon('x', 11)}</button>
+      ${t.image_url ? `<img src="${t.image_url}" style="width:44px;height:44px;object-fit:contain;">` : skinCardHtml(t.display_name, 44)}
+      <div class="ug-slot-name">${t.display_name}</div>
+      <div class="ug-slot-price">${t.price_rub.toFixed(2)} ₽</div>
+    </div>`;
+  }
+
+  function itemGridHtml() {
+    const q = activeUpgrade.search.trim().toLowerCase();
+    if (activeUpgrade.pickerTab === 'stake') {
+      const daysCard = daysNow > 0 ? `
+        <div class="ug-item-card ${activeUpgrade.stakeType === 'days' ? 'selected' : ''}" data-pick="days">
+          <div class="ug-item-icon" style="width:44px;height:44px;margin:0 auto;display:flex;align-items:center;justify-content:center;border-radius:8px;background:linear-gradient(160deg, hsl(45,65%,30%), hsl(45,55%,12%));">${svgIcon('shieldCheck', 26, { color: '#ffd27a' })}</div>
+          <div class="ug-item-name">Дни подписки</div>
+          <div class="ug-item-price">до ${daysNow} дн.</div>
+        </div>` : '';
+      const skinCards = ownedSkins
+        .filter((it) => !q || it.display_name.toLowerCase().includes(q))
+        .map((it) => `
+        <div class="ug-item-card ${activeUpgrade.stakeType === 'skin' && activeUpgrade.stakeInventoryId === it.id ? 'selected' : ''}" data-pick="skin" data-id="${it.id}">
+          ${it.image_url ? `<img src="${it.image_url}">` : skinCardHtml(it.display_name, 44)}
+          <div class="ug-item-name">${it.display_name}</div>
+          <div class="ug-item-price">${it.price_rub_at_win.toFixed(2)} ₽</div>
+        </div>`).join('');
+      return (daysCard + skinCards) || '<div class="muted" style="grid-column:1/-1;text-align:center;padding:12px;">Пока нет скинов в инвентаре.</div>';
+    }
+    const cards = targets
+      .filter((s) => !q || s.display_name.toLowerCase().includes(q))
+      .map((s) => `
+      <div class="ug-item-card ${activeUpgrade.targetSkinId === s.id ? 'selected' : ''}" data-pick="target" data-id="${s.id}">
+        ${s.image_url ? `<img src="${s.image_url}">` : skinCardHtml(s.display_name, 44)}
+        <div class="ug-item-name">${s.display_name}</div>
+        <div class="ug-item-price">${s.price_rub.toFixed(2)} ₽</div>
+      </div>`).join('');
+    return cards || '<div class="muted" style="grid-column:1/-1;text-align:center;padding:12px;">Ничего не найдено.</div>';
+  }
+
+  function stakeValueRub() {
+    if (activeUpgrade.stakeType === 'skin') {
+      const it = ownedSkins.find((x) => x.id === activeUpgrade.stakeInventoryId);
+      return it ? it.price_rub_at_win : null;
+    }
+    return activeUpgrade.stakeAmount > 0 ? activeUpgrade.stakeAmount * dayPriceRub : null;
+  }
+
+  function updateChanceAndCta() {
+    const target = targets.find((s) => s.id === activeUpgrade.targetSkinId);
+    const sv = stakeValueRub();
+    const cta = document.getElementById('ug-cta');
+    const percentEl = document.getElementById('ug-percent');
+    const captionEl = document.getElementById('ug-caption');
+    if (sv == null || !target) {
+      percentEl.textContent = '—';
+      captionEl.textContent = 'Выберите ставку и цель';
+      cta.disabled = true;
+      cta.textContent = 'Выберите ставку и цель';
+      ugApplyArc(0);
+      return;
+    }
+    if (!(target.price_rub > sv)) {
+      percentEl.textContent = '—';
+      captionEl.textContent = 'Цель дешевле ставки';
+      cta.disabled = true;
+      cta.textContent = 'Цель должна быть дороже ставки';
+      ugApplyArc(0);
+      return;
+    }
+    const chance = Math.min(status.upgradeSkinChanceMax, Math.max(status.upgradeSkinChanceMin, (sv / target.price_rub) * 100));
+    percentEl.textContent = `${chance.toFixed(1)}%`;
+    captionEl.textContent = `Шанс апгрейда ×${(target.price_rub / sv).toFixed(2)}`;
+    cta.disabled = false;
+    cta.textContent = 'Апгрейднуть';
+    ugApplyArc(chance);
+    const needle = document.getElementById('ug-needle');
+    needle.style.transition = 'none';
+    needle.style.transform = 'rotate(0deg)';
+  }
+
+  // Grid cards and the slot-row's clear/slider controls are recreated by every
+  // rerenderSlotsAndGrid() call, so re-binding them each time is safe (their old DOM nodes, and
+  // any listeners on them, are discarded together). The search box, tabs and CTA button are NOT
+  // recreated - they're bound exactly once in bindStaticControls, below, so clicking a card
+  // repeatedly never piles up duplicate submit handlers on the CTA.
+  function bindGrid() {
+    document.querySelectorAll('#ug-item-grid .ug-item-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        if (card.dataset.pick === 'days') {
+          activeUpgrade.stakeType = 'days';
+          activeUpgrade.stakeInventoryId = null;
+        } else if (card.dataset.pick === 'skin') {
+          activeUpgrade.stakeType = 'skin';
+          activeUpgrade.stakeInventoryId = Number(card.dataset.id);
+        } else {
+          activeUpgrade.targetSkinId = Number(card.dataset.id);
+        }
+        rerenderSlotsAndGrid();
+      });
+    });
+  }
+
+  function bindSlotControls() {
+    document.getElementById('ug-clear-stake')?.addEventListener('click', () => {
+      activeUpgrade.stakeType = daysNow > 0 ? 'days' : 'skin';
+      activeUpgrade.stakeInventoryId = null;
+      rerenderSlotsAndGrid();
+    });
+    document.getElementById('ug-clear-target')?.addEventListener('click', () => {
+      activeUpgrade.targetSkinId = null;
+      rerenderSlotsAndGrid();
+    });
+    document.getElementById('ug-stake-days-slider')?.addEventListener('input', (e) => {
+      activeUpgrade.stakeAmount = Number(e.target.value);
+      document.getElementById('ug-stake-days-price').textContent = `${activeUpgrade.stakeAmount} ${daysWord(activeUpgrade.stakeAmount)} ≈ ${(activeUpgrade.stakeAmount * dayPriceRub).toFixed(2)} ₽`;
+      updateChanceAndCta();
+    });
+  }
+
+  function rerenderSlotsAndGrid() {
+    document.querySelector('.ug-slot-row').innerHTML = stakeSlotHtml() + targetSlotHtml();
+    document.getElementById('ug-item-grid').innerHTML = itemGridHtml();
+    bindSlotControls();
+    bindGrid();
+    updateChanceAndCta();
+  }
+
+  function bindStaticControls() {
+    document.querySelectorAll('.ug-picker-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        activeUpgrade.pickerTab = tab.dataset.tab;
+        activeUpgrade.search = '';
+        document.querySelectorAll('.ug-picker-tab').forEach((t) => t.classList.toggle('active', t === tab));
+        document.getElementById('ug-search').value = '';
+        document.getElementById('ug-item-grid').innerHTML = itemGridHtml();
+        bindGrid();
+      });
+    });
+    document.getElementById('ug-search').addEventListener('input', (e) => {
+      activeUpgrade.search = e.target.value;
+      document.getElementById('ug-item-grid').innerHTML = itemGridHtml();
+      bindGrid();
+    });
+    document.getElementById('ug-cta').addEventListener('click', startUpgradeSpin);
+  }
+
+  async function startUpgradeSpin() {
+    if (activeUpgrade.spinning) return;
+    const cta = document.getElementById('ug-cta');
+    if (cta.disabled) return;
+    activeUpgrade.spinning = true;
+    cta.disabled = true;
+    document.querySelectorAll('.ug-item-card, .ug-slot-remove').forEach((c) => (c.style.pointerEvents = 'none'));
+
+    const { stakeType, stakeAmount, stakeInventoryId, targetSkinId } = activeUpgrade;
+    let result;
+    try {
+      result = await api('/api/app/upgrade', {
+        method: 'POST',
+        body: JSON.stringify({ stakeType, stakeAmount, stakeInventoryId, targetSkinId }),
+      });
+    } catch (e) {
+      activeUpgrade.spinning = false;
+      cta.disabled = false;
+      document.querySelectorAll('.ug-item-card, .ug-slot-remove').forEach((c) => (c.style.pointerEvents = ''));
+      let payload = null;
+      try { payload = JSON.parse(e.message); } catch {}
+      const desc = payload?.error === 'target_not_higher' ? 'Цель должна быть дороже вашей ставки.' : 'Попробуйте ещё раз чуть позже.';
+      showResult({ title: 'Не получилось', desc }, true);
+      return;
+    }
+
+    const { half, start, end } = ugArcParts(result.chance);
+    let landing;
+    if (result.win) {
+      landing = 180 + (Math.random() - 0.5) * half * 1.2;
+    } else {
+      const safeSpan = 360 - (end - start) - 16;
+      landing = (end + 8 + Math.random() * safeSpan) % 360;
+    }
+    const needle = document.getElementById('ug-needle');
+    needle.style.transition = 'transform 3.4s cubic-bezier(.13,.7,.18,1)';
+    needle.style.transform = `rotate(${5 * 360 + landing}deg)`;
+
+    setTimeout(() => {
+      activeUpgrade.spinning = false;
+      if (result.win) {
+        showResult({ title: 'Апгрейд удался!', desc: `Вы выиграли: ${result.targetSkin.display_name} · ${Math.round(result.targetSkin.price_rub).toLocaleString('ru-RU')} ₽` });
+      } else {
+        showResult({ title: 'Апгрейд не удался', desc: 'Ставка сгорела. Попробуйте ещё раз.' }, true);
+      }
+    }, 3500);
+  }
+
   el.innerHTML = `
     <div class="ug-panel">
-      <div class="ug-eyebrow"><span>Апгрейд подписки</span><span class="ug-live">вращение активно</span></div>
-      <div class="ug-sub-row">
-        <span style="font-size:12.5px;color:#89919d;">Доступно</span>
-        <span style="font-size:15px;font-weight:800;">${daysNow} ${daysWord(daysNow)} · ${coinsNow} монет</span>
-      </div>
-
-      <div class="ug-stake-toggle" id="ug-stake-toggle">
-        <div class="ug-stake-btn" data-type="days" ${daysNow <= 0 ? 'style="opacity:.4;pointer-events:none;"' : ''}>${svgIcon('shieldCheck', 14)} Дни подписки</div>
-        <div class="ug-stake-btn" data-type="coins" ${coinsNow <= 0 ? 'style="opacity:.4;pointer-events:none;"' : ''}>${svgIcon('coin', 14)} Монеты</div>
-      </div>
-
-      <div class="ug-slider-row">
-        <div class="ug-slider-label"><span>Ставка</span><b id="ug-stake-value"></b></div>
-        <input type="range" class="ug-slider" id="ug-stake-slider" min="1" step="1">
-      </div>
-
-      <div class="ug-mult-grid" id="ug-mult-grid">
-        ${Object.entries(multipliers).map(([m, chance]) => `
-          <div class="ug-mult-btn" data-mult="${m}">
-            <div class="ug-mult-val">×${m}</div>
-            <div class="ug-mult-chance">${chance}%</div>
-          </div>`).join('')}
-      </div>
+      <div class="ug-eyebrow"><span>Апгрейд</span><span class="ug-live">вращение активно</span></div>
+      <div class="ug-slot-row">${stakeSlotHtml()}${targetSlotHtml()}</div>
       <div class="ug-gauge-wrap">
         ${ugGaugeSvg()}
         <div class="ug-center"><div class="ug-percent" id="ug-percent"></div><div class="ug-caption" id="ug-caption"></div></div>
       </div>
-      <div class="ug-outcome">
-        <div style="text-align:center;"><div style="font-size:15px;font-weight:800;" id="ug-stake-preview"></div><div style="font-size:10px;color:#89919d;margin-top:2px;">на кону</div></div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6c7482" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        <div style="text-align:center;"><div style="font-size:16px;font-weight:800;background:linear-gradient(180deg,#ff9b19,#ff670b 55%,#d84008);-webkit-background-clip:text;background-clip:text;color:transparent;" id="ug-after"></div><div style="font-size:10px;color:#89919d;margin-top:2px;">при удаче</div></div>
-      </div>
       <button class="ug-cta" id="ug-cta"></button>
-      <div class="ug-hint">Если спин неудачный — поставленное сгорает. Играй осознанно.</div>
+      <div class="ug-hint">Если спин неудачный — ставка сгорает. Реальный шанс ниже отображаемого — см. условия честной игры.</div>
       <a class="ug-fair-link" href="/fair-play.html" target="_blank" rel="noopener">Условия честной игры и реальные шансы →</a>
-    </div>
-    <div id="ug-skin-section"></div>`;
-  renderSkinUpgradeSection(daysNow, status.dayPriceRub, status.upgradeSkinChanceMin, status.upgradeSkinChanceMax);
 
-  document.querySelectorAll('#ug-stake-toggle .ug-stake-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      if (activeUpgrade.spinning || maxByType[btn.dataset.type] <= 0) return;
-      activeUpgrade.stakeType = btn.dataset.type;
-      activeUpgrade.stakeAmount = Math.max(1, Math.ceil(maxByType[btn.dataset.type] / 2));
-      ugRenderSelection(multipliers, maxByType);
-    });
-  });
-
-  document.getElementById('ug-stake-slider').addEventListener('input', (e) => {
-    activeUpgrade.stakeAmount = Number(e.target.value);
-    ugRenderSelection(multipliers, maxByType);
-  });
-
-  document.querySelectorAll('#ug-mult-grid .ug-mult-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      if (activeUpgrade.spinning) return;
-      activeUpgrade.multiplier = Number(btn.dataset.mult);
-      ugRenderSelection(multipliers, maxByType);
-    });
-  });
-
-  ugRenderSelection(multipliers, maxByType);
-}
-
-function ugRenderSelection(multipliers, maxByType) {
-  const { multiplier, stakeType } = activeUpgrade;
-  const max = Math.max(1, maxByType[stakeType]);
-  const chance = multipliers[multiplier];
-
-  document.querySelectorAll('#ug-stake-toggle .ug-stake-btn').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.type === stakeType);
-  });
-
-  const slider = document.getElementById('ug-stake-slider');
-  slider.max = String(max);
-  activeUpgrade.stakeAmount = Math.min(Math.max(1, activeUpgrade.stakeAmount), max);
-  slider.value = String(activeUpgrade.stakeAmount);
-  const unit = (n) => (stakeType === 'days' ? daysWord(n) : 'монет');
-  document.getElementById('ug-stake-value').textContent = `${activeUpgrade.stakeAmount} ${unit(activeUpgrade.stakeAmount)}`;
-
-  document.querySelectorAll('#ug-mult-grid .ug-mult-btn').forEach((btn) => {
-    btn.classList.toggle('active', Number(btn.dataset.mult) === multiplier);
-  });
-  document.getElementById('ug-percent').textContent = `${chance.toFixed(2)}%`;
-  document.getElementById('ug-caption').textContent = `Шанс на ×${multiplier}`;
-  document.getElementById('ug-stake-preview').textContent = `${activeUpgrade.stakeAmount} ${unit(activeUpgrade.stakeAmount)}`;
-  const afterAmount = activeUpgrade.stakeAmount * multiplier;
-  document.getElementById('ug-after').textContent = `${afterAmount} ${unit(afterAmount)}`;
-  const cta = document.getElementById('ug-cta');
-  cta.disabled = false;
-  cta.textContent = `Улучшить на ×${multiplier}`;
-  cta.onclick = () => startUpgradeSpin(multipliers, maxByType);
-  ugApplyArc(chance);
-  const needle = document.getElementById('ug-needle');
-  needle.style.transition = 'none';
-  needle.style.transform = 'rotate(0deg)';
-}
-
-async function startUpgradeSpin(multipliers, maxByType) {
-  if (!activeUpgrade || activeUpgrade.spinning) return;
-  activeUpgrade.spinning = true;
-  document.getElementById('ug-cta').disabled = true;
-  document.querySelectorAll('#ug-mult-grid .ug-mult-btn').forEach((b) => (b.style.pointerEvents = 'none'));
-  document.querySelectorAll('#ug-stake-toggle .ug-stake-btn').forEach((b) => (b.style.pointerEvents = 'none'));
-  document.getElementById('ug-stake-slider').disabled = true;
-
-  const { multiplier, stakeType, stakeAmount } = activeUpgrade;
-  let result;
-  try {
-    result = await api('/api/app/upgrade', { method: 'POST', body: JSON.stringify({ multiplier, stakeType, stakeAmount }) });
-  } catch (e) {
-    activeUpgrade.spinning = false;
-    document.getElementById('ug-cta').disabled = false;
-    document.querySelectorAll('#ug-mult-grid .ug-mult-btn').forEach((b) => (b.style.pointerEvents = ''));
-    document.querySelectorAll('#ug-stake-toggle .ug-stake-btn').forEach((b) => (b.style.pointerEvents = ''));
-    document.getElementById('ug-stake-slider').disabled = false;
-    showResult({ title: 'Не получилось', desc: 'Попробуйте ещё раз чуть позже.' }, true);
-    return;
-  }
-
-  const { half, start, end } = ugArcParts(result.chance);
-  let landing;
-  if (result.win) {
-    landing = 180 + (Math.random() - 0.5) * half * 1.2;
-  } else {
-    const safeSpan = 360 - (end - start) - 16;
-    landing = (end + 8 + Math.random() * safeSpan) % 360;
-  }
-  const needle = document.getElementById('ug-needle');
-  needle.style.transition = 'transform 3.4s cubic-bezier(.13,.7,.18,1)';
-  needle.style.transform = `rotate(${5 * 360 + landing}deg)`;
-
-  setTimeout(() => {
-    activeUpgrade.spinning = false;
-    const unit = result.stakeType === 'days' ? daysWord(result.stakeAmount) : 'монет';
-    if (result.win) {
-      showResult({ title: 'Апгрейд удался!', desc: `${result.stakeAmount} → ${result.resultAmount} ${unit}` });
-    } else {
-      const lost = result.stakeType === 'days' ? 'Дни подписки сгорели.' : 'Монеты сгорели.';
-      showResult({ title: 'Апгрейд не удался', desc: `${lost} Оформите подписку или зарабатывайте монеты в кейсах.` }, true);
-    }
-  }, 3500);
-}
-
-// --- Апгрейд на скин: stake days or an owned skin at one specific, more valuable target skin ---
-
-let activeSkinUpgrade = null; // { stakeType, stakeAmount, stakeInventoryId, targetSkinId, spinning }
-
-async function renderSkinUpgradeSection(daysNow, dayPriceRub, chanceMin, chanceMax) {
-  const container = document.getElementById('ug-skin-section');
-  if (!container) return;
-  container.innerHTML = '<div class="muted" style="text-align:center;padding:10px;">Загрузка…</div>';
-  let inv, catalog;
-  try {
-    [inv, catalog] = await Promise.all([api('/api/app/inventory'), api('/api/app/skins')]);
-  } catch {
-    container.innerHTML = '';
-    return;
-  }
-  const ownedSkins = inv.items.filter((it) => it.status === 'owned');
-  const targets = catalog.skins;
-  if (!targets.length || (daysNow <= 0 && !ownedSkins.length)) {
-    container.innerHTML = daysNow <= 0 && !ownedSkins.length
-      ? '<div class="card muted" style="margin-top:14px;">Нужны дни подписки или скин в инвентаре, чтобы играть в апгрейд на скин.</div>'
-      : '';
-    return;
-  }
-
-  const keepType = activeSkinUpgrade && ((activeSkinUpgrade.stakeType === 'days' && daysNow > 0) || (activeSkinUpgrade.stakeType === 'skin' && ownedSkins.length))
-    ? activeSkinUpgrade.stakeType
-    : (daysNow > 0 ? 'days' : 'skin');
-  activeSkinUpgrade = {
-    stakeType: keepType,
-    stakeAmount: Math.max(1, Math.min(daysNow || 1, Math.ceil((daysNow || 1) / 4))),
-    stakeInventoryId: ownedSkins[0]?.id ?? null,
-    targetSkinId: targets[0]?.id ?? null,
-    spinning: false,
-  };
-
-  container.innerHTML = `
-    <div class="ug-panel" style="margin-top:14px;">
-      <div class="ug-eyebrow"><span>Апгрейд на скин</span></div>
-      <div class="ug-stake-toggle" id="ugs-stake-toggle">
-        <div class="ug-stake-btn" data-type="days" ${daysNow <= 0 ? 'style="opacity:.4;pointer-events:none;"' : ''}>${svgIcon('shieldCheck', 14)} Дни</div>
-        <div class="ug-stake-btn" data-type="skin" ${!ownedSkins.length ? 'style="opacity:.4;pointer-events:none;"' : ''}>${svgIcon('gem', 14)} Скин из инвентаря</div>
+      <div class="ug-picker-tabs">
+        <div class="ug-picker-tab ${activeUpgrade.pickerTab === 'stake' ? 'active' : ''}" data-tab="stake">Инвентарь</div>
+        <div class="ug-picker-tab ${activeUpgrade.pickerTab === 'target' ? 'active' : ''}" data-tab="target">Желаемый скин</div>
       </div>
-      <div id="ugs-stake-body"></div>
-      <div class="ug-slider-row">
-        <div class="ug-slider-label"><span>Цель</span></div>
-        <select class="field-select" id="ugs-target" style="width:100%;">
-          ${targets.map((s) => `<option value="${s.id}">${s.display_name} — ${s.price_rub.toFixed(2)} ₽</option>`).join('')}
-        </select>
-      </div>
-      <div class="ug-outcome">
-        <div style="text-align:center;"><div style="font-size:20px;font-weight:800;" id="ugs-chance">—</div><div style="font-size:10px;color:#89919d;margin-top:2px;">шанс (${chanceMin}–${chanceMax}%)</div></div>
-      </div>
-      <button class="ug-cta" id="ugs-cta">Апгрейднуть</button>
-      <div class="ug-hint" id="ugs-hint">Если спин неудачный — ставка сгорает. Реальный шанс ниже отображаемого — см. условия честной игры.</div>
-      <a class="ug-fair-link" href="/fair-play.html" target="_blank" rel="noopener">Условия честной игры и реальные шансы →</a>
+      <input class="ug-search" id="ug-search" placeholder="Быстрый поиск">
+      <div class="ug-item-grid" id="ug-item-grid">${itemGridHtml()}</div>
     </div>`;
 
-  function renderStakeBody() {
-    const body = document.getElementById('ugs-stake-body');
-    if (activeSkinUpgrade.stakeType === 'days') {
-      body.innerHTML = `
-        <div class="ug-slider-row">
-          <div class="ug-slider-label"><span>Ставка (дней)</span><b id="ugs-stake-value"></b></div>
-          <input type="range" class="ug-slider" id="ugs-days-slider" min="1" max="${Math.max(1, daysNow)}" step="1">
-        </div>`;
-      const slider = document.getElementById('ugs-days-slider');
-      activeSkinUpgrade.stakeAmount = Math.min(Math.max(1, activeSkinUpgrade.stakeAmount), Math.max(1, daysNow));
-      slider.value = String(activeSkinUpgrade.stakeAmount);
-      document.getElementById('ugs-stake-value').textContent = `${activeSkinUpgrade.stakeAmount} ${daysWord(activeSkinUpgrade.stakeAmount)} ≈ ${(activeSkinUpgrade.stakeAmount * dayPriceRub).toFixed(2)} ₽`;
-      slider.addEventListener('input', (e) => {
-        activeSkinUpgrade.stakeAmount = Number(e.target.value);
-        document.getElementById('ugs-stake-value').textContent = `${activeSkinUpgrade.stakeAmount} ${daysWord(activeSkinUpgrade.stakeAmount)} ≈ ${(activeSkinUpgrade.stakeAmount * dayPriceRub).toFixed(2)} ₽`;
-        recomputeChance();
-      });
-    } else {
-      body.innerHTML = `
-        <div class="ug-slider-row">
-          <div class="ug-slider-label"><span>Ваш скин</span></div>
-          <select class="field-select" id="ugs-stake-skin" style="width:100%;">
-            ${ownedSkins.map((it) => `<option value="${it.id}">${it.display_name} — ${it.price_rub_at_win.toFixed(2)} ₽</option>`).join('')}
-          </select>
-        </div>`;
-      activeSkinUpgrade.stakeInventoryId = ownedSkins[0]?.id ?? null;
-      document.getElementById('ugs-stake-skin').addEventListener('change', (e) => {
-        activeSkinUpgrade.stakeInventoryId = Number(e.target.value);
-        recomputeChance();
-      });
-    }
-  }
-
-  function stakeValueRub() {
-    if (activeSkinUpgrade.stakeType === 'days') return activeSkinUpgrade.stakeAmount * dayPriceRub;
-    const owned = ownedSkins.find((it) => it.id === activeSkinUpgrade.stakeInventoryId);
-    return owned ? owned.price_rub_at_win : 0;
-  }
-
-  function recomputeChance() {
-    const target = targets.find((s) => s.id === activeSkinUpgrade.targetSkinId);
-    const cta = document.getElementById('ugs-cta');
-    if (!target) { document.getElementById('ugs-chance').textContent = '—'; cta.disabled = true; return; }
-    const sv = stakeValueRub();
-    if (!(target.price_rub > sv)) {
-      document.getElementById('ugs-chance').textContent = '—';
-      document.getElementById('ugs-hint').textContent = 'Выберите цель дороже вашей ставки.';
-      cta.disabled = true;
-      return;
-    }
-    const chance = Math.min(chanceMax, Math.max(chanceMin, (sv / target.price_rub) * 100));
-    document.getElementById('ugs-chance').textContent = `${chance.toFixed(1)}%`;
-    document.getElementById('ugs-hint').textContent = 'Если спин неудачный — ставка сгорает. Реальный шанс ниже отображаемого — см. условия честной игры.';
-    cta.disabled = false;
-  }
-
-  document.querySelectorAll('#ugs-stake-toggle .ug-stake-btn').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.type === activeSkinUpgrade.stakeType);
-    btn.addEventListener('click', () => {
-      if (activeSkinUpgrade.spinning) return;
-      activeSkinUpgrade.stakeType = btn.dataset.type;
-      document.querySelectorAll('#ugs-stake-toggle .ug-stake-btn').forEach((b) => b.classList.toggle('active', b === btn));
-      renderStakeBody();
-      recomputeChance();
-    });
-  });
-
-  document.getElementById('ugs-target').addEventListener('change', (e) => {
-    activeSkinUpgrade.targetSkinId = Number(e.target.value);
-    recomputeChance();
-  });
-
-  renderStakeBody();
-  recomputeChance();
-
-  document.getElementById('ugs-cta').addEventListener('click', () => startSkinUpgradeSpin());
-}
-
-async function startSkinUpgradeSpin() {
-  if (!activeSkinUpgrade || activeSkinUpgrade.spinning) return;
-  activeSkinUpgrade.spinning = true;
-  const cta = document.getElementById('ugs-cta');
-  cta.disabled = true;
-
-  const { stakeType, stakeAmount, stakeInventoryId, targetSkinId } = activeSkinUpgrade;
-  let result;
-  try {
-    result = await api('/api/app/upgrade', {
-      method: 'POST',
-      body: JSON.stringify({ stakeType, stakeAmount, stakeInventoryId, targetSkinId }),
-    });
-  } catch (e) {
-    activeSkinUpgrade.spinning = false;
-    cta.disabled = false;
-    let payload = null;
-    try { payload = JSON.parse(e.message); } catch {}
-    const desc = payload?.error === 'target_not_higher' ? 'Цель должна быть дороже вашей ставки.' : 'Попробуйте ещё раз чуть позже.';
-    showResult({ title: 'Не получилось', desc }, true);
-    return;
-  }
-
-  activeSkinUpgrade.spinning = false;
-  if (result.win) {
-    showResult({ title: 'Апгрейд удался!', desc: `Вы выиграли: ${result.targetSkin.display_name} · ${Math.round(result.targetSkin.price_rub).toLocaleString('ru-RU')} ₽` });
-  } else {
-    showResult({ title: 'Апгрейд не удался', desc: 'Ставка сгорела. Попробуйте ещё раз.' }, true);
-  }
-  renderUpgradeTab();
+  bindStaticControls();
+  bindSlotControls();
+  bindGrid();
+  updateChanceAndCta();
 }
 
 function switchTab(name) {
