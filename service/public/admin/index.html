@@ -63,6 +63,7 @@
   .skin-thumb { width: 34px; height: 34px; object-fit: contain; background: rgba(255,255,255,0.05); border-radius: 6px; vertical-align: middle; margin-right: 8px; }
   td input.sk-price { width: 90px; padding: 6px 8px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); color: #f3f0fb; }
   td input.sk-name { width: 100%; padding: 6px 8px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); color: #f3f0fb; }
+  td input.sk-hash { width: 100%; padding: 5px 8px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); }
   .new-case-form { display: flex; gap: 8px; padding: 14px 20px; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.07); }
   .new-case-form input, .new-case-form select { padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); color: #f3f0fb; font-size: 13px; }
   .new-case-form button { padding: 9px 16px; border-radius: 8px; border: none; background: #ff3b3b; color: #fff; font-weight: 700; cursor: pointer; }
@@ -647,7 +648,8 @@ async function loadSkins() {
   const rows = await api('/admin/api/skins');
   document.getElementById('skins-body').innerHTML = rows.map((s) => `
     <tr data-id="${s.id}">
-      <td>${s.image_url ? `<img class="skin-thumb" src="${s.image_url}">` : ''}<input class="sk-name" value="${s.display_name}"></td>
+      <td>${s.image_url ? `<img class="skin-thumb" src="${s.image_url}">` : ''}<input class="sk-name" value="${s.display_name}">
+        <input class="sk-hash" value="${s.market_hash_name}" title="market_hash_name — точное название на Steam Market, поменяйте если Steam его не находит" style="margin-top:4px;font-size:10.5px;color:#8a80ab;"></td>
       <td><input class="sk-price" type="number" step="0.01" value="${s.price_rub}"></td>
       <td style="color:#8a80ab;font-size:11px">${s.price_updated_at || '—'}</td>
       <td><input type="checkbox" class="sk-upgrade" ${s.available_for_upgrade ? 'checked' : ''}></td>
@@ -665,6 +667,7 @@ async function loadSkins() {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           displayName: row.querySelector('.sk-name').value,
+          marketHashName: row.querySelector('.sk-hash').value.trim(),
           priceRub: parseFloat(row.querySelector('.sk-price').value),
           availableForUpgrade: row.querySelector('.sk-upgrade').checked,
         }),

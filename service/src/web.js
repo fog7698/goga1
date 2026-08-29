@@ -689,16 +689,21 @@ function createApp(botApi) {
   });
 
   app.put('/admin/api/skins/:id', (req, res) => {
-    const { displayName, imageUrl, priceRub, availableForUpgrade } = req.body || {};
-    res.json({
-      ok: true,
-      skin: skins.updateSkin(Number(req.params.id), {
-        displayName,
-        imageUrl,
-        priceRub: priceRub != null ? Number(priceRub) : undefined,
-        availableForUpgrade,
-      }),
-    });
+    const { displayName, imageUrl, priceRub, availableForUpgrade, marketHashName } = req.body || {};
+    try {
+      res.json({
+        ok: true,
+        skin: skins.updateSkin(Number(req.params.id), {
+          displayName,
+          imageUrl,
+          priceRub: priceRub != null ? Number(priceRub) : undefined,
+          availableForUpgrade,
+          marketHashName,
+        }),
+      });
+    } catch {
+      res.status(400).json({ error: 'name_taken' });
+    }
   });
 
   app.delete('/admin/api/skins/:id', (req, res) => {
