@@ -64,6 +64,9 @@
   td input.sk-price { width: 90px; padding: 6px 8px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); color: #f3f0fb; }
   td input.sk-name { width: 100%; padding: 6px 8px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); color: #f3f0fb; }
   td input.sk-hash { width: 100%; padding: 5px 8px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); }
+  .sk-case-chips { display: flex; flex-wrap: wrap; gap: 4px; max-width: 130px; }
+  .case-chip { padding: 4px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700; cursor: pointer; border: 1px solid rgba(255,255,255,0.16); color: #8a80ab; background: transparent; }
+  .case-chip.on { background: rgba(255,210,122,0.16); color: #ffd27a; border-color: rgba(255,210,122,0.4); }
   .new-case-form { display: flex; gap: 8px; padding: 14px 20px; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.07); }
   .new-case-form input, .new-case-form select { padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); color: #f3f0fb; font-size: 13px; }
   .new-case-form button { padding: 9px 16px; border-radius: 8px; border: none; background: #ff3b3b; color: #fff; font-weight: 700; cursor: pointer; }
@@ -174,7 +177,7 @@
       <button id="sk-create">+ Добавить скин</button>
     </div>
     <table>
-      <thead><tr><th>Скин</th><th>Цена ₽</th><th>Обновлена</th><th>В апгрейде</th><th>Действия</th></tr></thead>
+      <thead><tr><th>Скин</th><th>Цена ₽</th><th>Обновлена</th><th>В апгрейде</th><th>Кейсы</th><th>Действия</th></tr></thead>
       <tbody id="skins-body"></tbody>
     </table>
   </div>
@@ -645,20 +648,31 @@ document.getElementById('econ-save').addEventListener('click', async () => {
 // --- Скины ---
 
 async function loadSkins() {
-  const rows = await api('/admin/api/skins');
-  document.getElementById('skins-body').innerHTML = rows.map((s) => `
+  const [rows, caseTypes] = await Promise.all([api('/admin/api/skins'), api('/admin/api/cases')]);
+  const dayCases = caseTypes.filter((c) => c.currency === 'days');
+  const memberOf = (skinId) => new Set(
+    dayCases.filter((c) => c.items.some((it) => it.skin_id === skinId)).map((c) => c.key)
+  );
+
+  document.getElementById('skins-body').innerHTML = rows.map((s) => {
+    const inCases = memberOf(s.id);
+    return `
     <tr data-id="${s.id}">
       <td>${s.image_url ? `<img class="skin-thumb" src="${s.image_url}">` : ''}<input class="sk-name" value="${s.display_name}">
         <input class="sk-hash" value="${s.market_hash_name}" title="market_hash_name — точное название на Steam Market, поменяйте если Steam его не находит" style="margin-top:4px;font-size:10.5px;color:#8a80ab;"></td>
       <td><input class="sk-price" type="number" step="0.01" value="${s.price_rub}"></td>
       <td style="color:#8a80ab;font-size:11px">${s.price_updated_at || '—'}</td>
       <td><input type="checkbox" class="sk-upgrade" ${s.available_for_upgrade ? 'checked' : ''}></td>
+      <td class="sk-case-chips">
+        ${dayCases.map((c) => `<span class="case-chip ${inCases.has(c.key) ? 'on' : ''}" data-case="${c.key}" title="${c.title}">${c.cost_days}д</span>`).join('')}
+      </td>
       <td>
         <button class="row-btn sk-save">Сохр.</button>
         <button class="row-btn sk-refresh">Обновить со Steam</button>
         <button class="row-btn sk-del">Удалить</button>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   document.querySelectorAll('#skins-body tr[data-id]').forEach((row) => {
     const id = row.dataset.id;
@@ -684,6 +698,24 @@ async function loadSkins() {
       if (!confirm('Удалить скин из каталога? Он также пропадёт из кейсов, где использовался.')) return;
       await api(`/admin/api/skins/${id}`, { method: 'DELETE' });
       loadSkins();
+    });
+    row.querySelectorAll('.case-chip').forEach((chip) => {
+      chip.addEventListener('click', async () => {
+        const key = chip.dataset.case;
+        const on = chip.classList.contains('on');
+        try {
+          if (on) await api(`/admin/api/cases/${key}/skin/${id}`, { method: 'DELETE' });
+          else await api(`/admin/api/cases/${key}/skin/${id}`, { method: 'PUT' });
+          chip.classList.toggle('on');
+        } catch (e) {
+          let payload = null;
+          try { payload = JSON.parse(e.message); } catch {}
+          const msg = payload?.error === 'price_out_of_band' ? 'Цена скина вне диапазона 10%-100x стоимости этого кейса'
+            : payload?.error === 'case_full' ? 'В кейсе уже максимум 30 предметов'
+            : 'Не получилось';
+          alert(msg);
+        }
+      });
     });
   });
 }

@@ -728,6 +728,35 @@ function createApp(botApi) {
 
   app.get('/admin/api/skins/refresh-all', (_req, res) => res.json(skins.getBulkRefreshState()));
 
+  // Per-skin case membership (add/remove from one case at a time), so the Скины catalog can
+  // control "which cases include this skin" directly instead of only from inside each case's own
+  // editor. Idempotent: adding an already-included skin or removing an absent one is a no-op.
+  app.put('/admin/api/cases/:key/skin/:skinId', (req, res) => {
+    const caseType = db.prepare('SELECT * FROM case_types WHERE key = ?').get(req.params.key);
+    if (!caseType) return res.status(404).json({ error: 'not_found' });
+    const skin = skins.getSkin(Number(req.params.skinId));
+    if (!skin) return res.status(404).json({ error: 'bad_skin' });
+    const existing = db.prepare('SELECT * FROM case_items WHERE case_type_id = ? AND skin_id = ?').get(caseType.id, skin.id);
+    if (existing) return res.json({ ok: true, id: existing.id });
+    const itemCount = db.prepare('SELECT COUNT(*) c FROM case_items WHERE case_type_id = ?').get(caseType.id).c;
+    if (itemCount >= MAX_ITEMS_PER_CASE) return res.status(400).json({ error: 'case_full' });
+    if (caseType.currency === 'days') {
+      const costRub = caseType.cost_days * economy.getConfig().dayPriceRub;
+      if (!skinPriceInBand(skin.price_rub, costRub)) return res.status(400).json({ error: 'price_out_of_band' });
+    }
+    const info = db
+      .prepare("INSERT INTO case_items (case_type_id, title, kind, value, weight, skin_id) VALUES (?,?,'skin',0,10,?)")
+      .run(caseType.id, skin.display_name, skin.id);
+    res.json({ ok: true, id: info.lastInsertRowid });
+  });
+
+  app.delete('/admin/api/cases/:key/skin/:skinId', (req, res) => {
+    const caseType = db.prepare('SELECT id FROM case_types WHERE key = ?').get(req.params.key);
+    if (!caseType) return res.status(404).json({ error: 'not_found' });
+    db.prepare('DELETE FROM case_items WHERE case_type_id = ? AND skin_id = ?').run(caseType.id, Number(req.params.skinId));
+    res.json({ ok: true });
+  });
+
   // --- Steam withdrawal queue ---
 
   app.get('/admin/api/withdrawals', (req, res) => res.json(inventory.listWithdrawals(req.query.status)));
