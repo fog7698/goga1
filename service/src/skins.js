@@ -80,25 +80,37 @@ function createSkin({ marketHashName, displayName, imageUrl, priceRub }) {
   return getSkin(info.lastInsertRowid);
 }
 
-function updateSkin(id, { displayName, imageUrl, priceRub, availableForUpgrade, marketHashName }) {
-  db.prepare(
-    `UPDATE skins SET
-       market_hash_name = COALESCE(?, market_hash_name),
-       display_name = COALESCE(?, display_name),
-       image_url = COALESCE(?, image_url),
-       price_rub = COALESCE(?, price_rub),
-       price_updated_at = CASE WHEN ? IS NOT NULL THEN datetime('now') ELSE price_updated_at END,
-       available_for_upgrade = COALESCE(?, available_for_upgrade)
-     WHERE id = ?`
-  ).run(
-    marketHashName ?? null,
-    displayName ?? null,
-    imageUrl ?? null,
-    Number.isFinite(priceRub) ? priceRub : null,
-    Number.isFinite(priceRub) ? 1 : null,
-    typeof availableForUpgrade === 'boolean' ? (availableForUpgrade ? 1 : 0) : null,
-    id
-  );
+/** Partial update - only touches the columns the caller actually passed. Unlike the previous
+ * COALESCE-everything version, this can tell "field omitted, leave it alone" (pass `undefined` or
+ * just don't include the key) apart from "field explicitly cleared" (pass `null`) - needed so a
+ * rename that finds no fresh photo can blank out the OLD item's now-irrelevant photo instead of
+ * silently leaving it displayed under the new name (see refreshSkinPrice). */
+function updateSkin(id, opts = {}) {
+  const sets = [];
+  const params = [];
+  if (opts.marketHashName !== undefined) {
+    sets.push('market_hash_name = ?');
+    params.push(opts.marketHashName);
+  }
+  if (opts.displayName !== undefined) {
+    sets.push('display_name = ?');
+    params.push(opts.displayName);
+  }
+  if (opts.imageUrl !== undefined) {
+    sets.push('image_url = ?');
+    params.push(opts.imageUrl);
+  }
+  if (opts.priceRub !== undefined && Number.isFinite(opts.priceRub)) {
+    sets.push('price_rub = ?', "price_updated_at = datetime('now')");
+    params.push(opts.priceRub);
+  }
+  if (opts.availableForUpgrade !== undefined) {
+    sets.push('available_for_upgrade = ?');
+    params.push(opts.availableForUpgrade ? 1 : 0);
+  }
+  if (sets.length) {
+    db.prepare(`UPDATE skins SET ${sets.join(', ')} WHERE id = ?`).run(...params, id);
+  }
   return getSkin(id);
 }
 
@@ -115,26 +127,35 @@ function marketHashNameTaken(name, excludeId) {
 // FN/MW only). These are the wears actually worth trying, in the order most CS2 skins support.
 const FALLBACK_WEARS = ['Field-Tested', 'Minimal Wear', 'Factory New', 'Well-Worn', 'Battle-Scarred'];
 
-/** Refresh one skin's price AND real photo from Steam Market in one admin-triggered action. If
- * the stored name doesn't resolve at all, tries the other 4 wear conditions on the same base
- * skin before giving up, and adopts whichever one actually exists on Steam (skipping any that
- * would collide with a different skin already in the catalog). Leaves whichever field Steam
- * didn't answer for (rate limit, no such listing) untouched rather than zeroing it out. */
+/** Refresh one skin's price AND real photo from Steam Market in one admin-triggered action. A
+ * real PRICE is the thing that actually matters (it's what the whole economy - drop odds, payout
+ * caps - runs on), so success is defined by finding one, not just an image: some item pages exist
+ * and have a real og:image (so an earlier version of this function accepted them) but currently
+ * have zero active market listings to price from - M4A4 | Howl and most StatTrak variants of the
+ * older Arms Deal skins (Fire Serpent, Vulcan, ...) are like this. Treating that as "done" left
+ * whatever stale price the row had before the call (often a leftover from a previous rename)
+ * silently displayed as if it were current. Now: if the stored name has no price, the other 4
+ * wear conditions on the same base skin are tried (skipping any that would collide with a
+ * different skin already in the catalog) until one actually has a price; only then is the row
+ * updated. No price found anywhere -> error, row left untouched (never a stale guess). */
 async function refreshSkinPrice(id) {
   const skin = getSkin(id);
   if (!skin) return { error: 'not_found' };
 
   let name = skin.market_hash_name;
-  let [price, iconUrl] = await Promise.all([fetchSteamPrice(name), fetchSteamIcon(name)]);
+  let price = await fetchSteamPrice(name);
+  let iconUrl = await fetchSteamIcon(name);
 
-  if (price == null && iconUrl == null) {
+  if (price == null) {
     const baseName = name.replace(/\s*\([^)]*\)\s*$/, '');
     for (const wear of FALLBACK_WEARS) {
       const candidate = `${baseName} (${wear})`;
       if (candidate === name || marketHashNameTaken(candidate, id)) continue;
       // eslint-disable-next-line no-await-in-loop
-      const [p, ic] = await Promise.all([fetchSteamPrice(candidate), fetchSteamIcon(candidate)]);
-      if (p != null || ic != null) {
+      const p = await fetchSteamPrice(candidate);
+      if (p != null) {
+        // eslint-disable-next-line no-await-in-loop
+        const ic = await fetchSteamIcon(candidate);
         name = candidate;
         price = p;
         iconUrl = ic;
@@ -143,12 +164,17 @@ async function refreshSkinPrice(id) {
     }
   }
 
-  if (price == null && iconUrl == null) return { error: 'steam_unavailable', skin };
+  if (price == null) return { error: 'steam_unavailable', skin };
+  const renamed = name !== skin.market_hash_name;
   return {
     skin: updateSkin(id, {
       priceRub: price,
-      imageUrl: iconUrl,
-      marketHashName: name !== skin.market_hash_name ? name : undefined,
+      // A fresh photo always wins. No fresh photo but the name changed -> the OLD photo belongs
+      // to a different item now, so clear it (null) rather than leave it displayed as if it were
+      // this one's. No fresh photo and the name is unchanged -> leave whatever photo it already
+      // had alone (undefined) - it's still valid, this was probably just a transient miss.
+      imageUrl: iconUrl !== null ? iconUrl : (renamed ? null : undefined),
+      marketHashName: renamed ? name : undefined,
     }),
   };
 }
