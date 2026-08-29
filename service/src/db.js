@@ -141,6 +141,54 @@ CREATE TABLE IF NOT EXISTS media_accounts (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Simple key/value store for the skin-payout economy (site balance + tuning knobs) - see
+-- economy.js. A row per setting rather than a singleton row so new knobs can be added without
+-- another migration.
+CREATE TABLE IF NOT EXISTS site_config (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
+-- Shared CS:GO/CS2 skin catalog, referenced by case_items (day-priced cases) and user_inventory.
+-- price_rub is normally refreshed from the Steam Community Market priceoverview endpoint by an
+-- admin action (skins.refreshSkinPrice) but can also be edited by hand as a reliable fallback.
+CREATE TABLE IF NOT EXISTS skins (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  market_hash_name TEXT UNIQUE NOT NULL,
+  display_name TEXT NOT NULL,
+  image_url TEXT,
+  price_rub REAL NOT NULL DEFAULT 0,
+  price_updated_at TEXT,
+  available_for_upgrade INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- A skin a user has won from a day-priced case or the upgrader, pending a decision: keep, sell
+-- back for subscription days, or request a Steam trade withdrawal (see inventory.js).
+CREATE TABLE IF NOT EXISTS user_inventory (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  skin_id INTEGER NOT NULL REFERENCES skins(id),
+  source TEXT NOT NULL,              -- case | upgrade
+  price_rub_at_win REAL NOT NULL,
+  status TEXT NOT NULL DEFAULT 'owned', -- owned | sold | withdraw_pending | withdrawn
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Steam trade withdrawal queue - fulfilled manually by an admin (no Steam bot/API credentials
+-- are configured), see inventory.requestWithdrawal and the admin "Заявки на вывод" panel.
+CREATE TABLE IF NOT EXISTS withdrawal_requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  inventory_id INTEGER NOT NULL REFERENCES user_inventory(id),
+  steam_trade_url TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending', -- pending | sent | rejected
+  admin_note TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `);
 
 // Columns added after the initial release - migrate existing DBs in place.
@@ -163,6 +211,43 @@ if (!upgradeAttemptCols.includes('stake_type')) {
   db.exec("ALTER TABLE upgrade_attempts ADD COLUMN stake_type TEXT NOT NULL DEFAULT 'days'");
   db.exec('ALTER TABLE upgrade_attempts ADD COLUMN stake_amount INTEGER');
   db.exec('ALTER TABLE upgrade_attempts ADD COLUMN coins_after INTEGER');
+}
+// Skin-targeted upgrade attempts (stake a skin from the inventory and/or target a specific skin
+// instead of a fixed days/coins multiplier) - see subscriptions.upgradeAttempt.
+if (!upgradeAttemptCols.includes('stake_skin_id')) {
+  db.exec('ALTER TABLE upgrade_attempts ADD COLUMN stake_skin_id INTEGER');
+  db.exec('ALTER TABLE upgrade_attempts ADD COLUMN target_skin_id INTEGER');
+}
+
+// Cases can now cost VPN days instead of coins, with skin-only prizes (day-priced cases) - see
+// cases.openCase / economy.js. cost_coins stays NOT NULL so it's set to 0 for currency='days'.
+const caseTypeCols = db.prepare('PRAGMA table_info(case_types)').all().map((c) => c.name);
+if (!caseTypeCols.includes('currency')) {
+  db.exec("ALTER TABLE case_types ADD COLUMN currency TEXT NOT NULL DEFAULT 'coins'");
+  db.exec('ALTER TABLE case_types ADD COLUMN cost_days INTEGER');
+}
+const caseItemCols = db.prepare('PRAGMA table_info(case_items)').all().map((c) => c.name);
+if (!caseItemCols.includes('skin_id')) {
+  db.exec('ALTER TABLE case_items ADD COLUMN skin_id INTEGER REFERENCES skins(id)');
+  db.exec('ALTER TABLE case_items ADD COLUMN quantity INTEGER'); // NULL = unlimited stock
+}
+const caseOpeningCols = db.prepare('PRAGMA table_info(case_openings)').all().map((c) => c.name);
+if (!caseOpeningCols.includes('cost_rub')) {
+  db.exec('ALTER TABLE case_openings ADD COLUMN cost_rub REAL');
+  db.exec('ALTER TABLE case_openings ADD COLUMN payout_rub REAL');
+}
+
+// Steam trade link, set from the Mini App profile page - required before a withdrawal request
+// can be created (inventory.requestWithdrawal).
+if (!userCols.includes('steam_trade_url')) {
+  db.exec('ALTER TABLE users ADD COLUMN steam_trade_url TEXT');
+}
+
+// Arbitrary-day purchases (see subscriptions.priceForDays) are logged with plan='custom_days' and
+// need the day count on hand for the webhook to know how many days to grant.
+const paymentCols = db.prepare('PRAGMA table_info(payments)').all().map((c) => c.name);
+if (!paymentCols.includes('days')) {
+  db.exec('ALTER TABLE payments ADD COLUMN days INTEGER');
 }
 
 // Backfill: every pre-existing subscription becomes device 1 in subscription_devices.
@@ -196,6 +281,79 @@ if (db.prepare('SELECT COUNT(*) c FROM case_types').get().c === 0) {
   insertItem.run(c12, '+90 дней подписки', 'days', 90, 15);
   insertItem.run(c12, 'Скидка 20% на оплату', 'percent', 20, 30);
   insertItem.run(c12, '+6 монет обратно', 'coins', 6, 15);
+}
+
+// Default economy knobs - INSERT OR IGNORE so an admin's saved values survive a redeploy.
+const defaultConfig = {
+  skin_prize_balance_rub: '0',
+  margin_target_percent: '20',
+  payout_share_factor: '0.8',
+  active_window_hours: '24',
+  day_price_rub: '2.5',
+};
+const insertConfig = db.prepare('INSERT OR IGNORE INTO site_config (key, value) VALUES (?,?)');
+for (const [key, value] of Object.entries(defaultConfig)) insertConfig.run(key, value);
+
+// Seed the 5 default day-priced skin cases (10/30/90/180/360 days) with a starter CS2 skin pool
+// on first boot only - after that the admin panel (Скины/Кейсы) owns the catalog, prices and
+// drop weights. Each case gets 30 items: 13 partial-loss (priced below the case's cost - the
+// user still gets something worth 10-95% of what they paid), 14 mid wins (1x-80x cost) and 3
+// jackpots (~100x cost), matching the required 10%-100x price band. Prices here are rough
+// placeholders sized off the multiplier, not live Steam data - use "Обновить цену" in /admin
+// after launch to replace them with real Steam Market prices.
+if (db.prepare("SELECT COUNT(*) c FROM case_types WHERE currency = 'days'").get().c === 0) {
+  const DAY_PRICE_RUB = 2.5;
+  const DAY_CASES = [
+    { key: 'days_10', title: 'Кейс · 10 дней', costDays: 10 },
+    { key: 'days_30', title: 'Кейс · 30 дней', costDays: 30 },
+    { key: 'days_90', title: 'Кейс · 90 дней', costDays: 90 },
+    { key: 'days_180', title: 'Кейс · 180 дней', costDays: 180 },
+    { key: 'days_360', title: 'Кейс · 360 дней', costDays: 360 },
+  ];
+  const WEARS = ['Battle-Scarred', 'Well-Worn', 'Field-Tested', 'Minimal Wear', 'Factory New'];
+  // 30 real CS2 skin families, ordered cheapest-feel to most expensive - index maps 1:1 to the
+  // multiplier/weight arrays below (loss[0-12], mid[13-26], jackpot[27-29]).
+  const SKIN_FAMILIES = [
+    'P250 | Sand Dune', 'MP9 | Storm', 'Glock-18 | Sand Dune', 'Nova | Predator',
+    'Five-SeveN | Copper Galaxy', 'MAC-10 | Indigo', 'UMP-45 | Riot', 'Tec-9 | Blue Titanium',
+    'P90 | Asiimov', 'Sawed-Off | Wasteland Rebel', 'Galil AR | Chatterbox', 'FAMAS | Roll Cage',
+    'SCAR-20 | Cyrex',
+    'SSG 08 | Blood in the Water', 'MP7 | Nemesis', 'Desert Eagle | Blaze', 'USP-S | Kill Confirmed',
+    'M4A1-S | Hyper Beast', 'AK-47 | Redline', 'AWP | Electric Hive', 'M4A4 | Neo-Noir',
+    'AK-47 | Vulcan', 'AWP | Asiimov', 'Glock-18 | Fade', 'AK-47 | Fire Serpent', 'M4A4 | Howl',
+    'AWP | Dragon Lore',
+    '★ Karambit | Doppler', '★ Butterfly Knife | Fade', '★ Sport Gloves | Vice',
+  ];
+  const LOSS_MULTS = [0.12, 0.18, 0.22, 0.28, 0.33, 0.40, 0.45, 0.52, 0.60, 0.68, 0.75, 0.85, 0.95];
+  const MID_MULTS = [1.3, 1.8, 2.5, 3.5, 5, 7, 10, 14, 19, 25, 33, 45, 60, 80];
+  const JACKPOT_MULTS = [100, 100, 100];
+  const MULTS = [...LOSS_MULTS, ...MID_MULTS, ...JACKPOT_MULTS];
+  const LOSS_WEIGHT = 60;
+  const MID_WEIGHTS = [40, 32, 26, 20, 15, 11, 8, 6, 4, 3, 2, 2, 1, 1];
+  const JACKPOT_WEIGHT = 1;
+  const WEIGHTS = [...MULTS.slice(0, 13).map(() => LOSS_WEIGHT), ...MID_WEIGHTS, JACKPOT_WEIGHT, JACKPOT_WEIGHT, JACKPOT_WEIGHT];
+
+  const insertDayCase = db.prepare(
+    'INSERT INTO case_types (key, title, cost_coins, sort_order, currency, cost_days) VALUES (?,?,0,?,?,?)'
+  );
+  const insertSkin = db.prepare(
+    'INSERT INTO skins (market_hash_name, display_name, price_rub, price_updated_at) VALUES (?,?,?,datetime(\'now\'))'
+  );
+  const insertDayItem = db.prepare(
+    'INSERT INTO case_items (case_type_id, title, kind, value, weight, skin_id) VALUES (?,?,\'skin\',0,?,?)'
+  );
+
+  DAY_CASES.forEach((def, ci) => {
+    const costRub = def.costDays * DAY_PRICE_RUB;
+    const caseTypeId = insertDayCase.run(def.key, def.title, 4 + ci, 'days', def.costDays).lastInsertRowid;
+    const wear = WEARS[ci];
+    SKIN_FAMILIES.forEach((family, i) => {
+      const marketHashName = `${family} (${wear})`;
+      const priceRub = Math.round(MULTS[i] * costRub * 100) / 100;
+      const skinId = insertSkin.run(marketHashName, marketHashName, priceRub).lastInsertRowid;
+      insertDayItem.run(caseTypeId, marketHashName, WEIGHTS[i], skinId);
+    });
+  });
 }
 
 module.exports = db;

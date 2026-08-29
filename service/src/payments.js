@@ -49,6 +49,39 @@ async function createPayment(userId, planKey, returnUrl, extraMetadata) {
   return { url: payment.confirmation?.confirmation_url, paymentId: payment.id };
 }
 
+/** Same as createPayment but for an arbitrary day count at `amountRub` (subscriptions.priceForDays)
+ * instead of a fixed PLANS tier. The `payments` row gets plan='custom_days' plus the day count in
+ * its `days` column so the webhook knows how many days to grant without a metadata round-trip. */
+async function createCustomPayment(userId, days, amountRub, returnUrl, extraMetadata) {
+  if (!configured()) return { error: 'not_configured' };
+
+  const res = await fetch('https://api.yookassa.ru/v3/payments', {
+    method: 'POST',
+    headers: {
+      Authorization: authHeader(),
+      'Content-Type': 'application/json',
+      'Idempotence-Key': crypto.randomUUID(),
+    },
+    body: JSON.stringify({
+      amount: { value: amountRub.toFixed(2), currency: 'RUB' },
+      confirmation: { type: 'redirect', return_url: returnUrl },
+      capture: true,
+      description:
+        extraMetadata?.gift === 'true' ? `TOKYO VPN — подарок: ${days} дн.` : `TOKYO VPN — ${days} дн.`,
+      metadata: { user_id: String(userId), plan: 'custom_days', days: String(days), ...extraMetadata },
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    return { error: 'yookassa_error', detail: text };
+  }
+  const payment = await res.json();
+  db.prepare(
+    'INSERT INTO payments (user_id, plan, amount, days, yookassa_payment_id, status) VALUES (?,?,?,?,?,?)'
+  ).run(userId, 'custom_days', amountRub, days, payment.id, 'pending');
+  return { url: payment.confirmation?.confirmation_url, paymentId: payment.id };
+}
+
 /** Re-check a payment's real status directly with YooKassa (never trust the webhook body alone). */
 async function fetchPaymentStatus(paymentId) {
   const res = await fetch(`https://api.yookassa.ru/v3/payments/${paymentId}`, {
@@ -58,4 +91,4 @@ async function fetchPaymentStatus(paymentId) {
   return res.json();
 }
 
-module.exports = { configured, createPayment, fetchPaymentStatus };
+module.exports = { configured, createPayment, createCustomPayment, fetchPaymentStatus };

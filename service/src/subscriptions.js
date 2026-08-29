@@ -1,5 +1,7 @@
 const crypto = require('crypto');
 const db = require('./db');
+const economy = require('./economy');
+const skinsMod = require('./skins');
 
 const PLANS = {
   '1m': { label: '1 месяц', days: 30, price: 75 },
@@ -9,6 +11,9 @@ const PLANS = {
 const TRIAL_DAYS = 3;
 const COINS_PER_PLAN = { '1m': 1, '6m': 6, '12m': 12 };
 const MAX_DEVICES_PER_SUBSCRIPTION = 3;
+// Arbitrary-day purchase/gift ceiling (see priceForDays) - 50000 days is ~137 years, plenty of
+// headroom while still bounding the size of a single YooKassa payment.
+const MAX_CUSTOM_DAYS = 50000;
 
 // Круг апгрейдера: multiplier -> displayed win chance percent. Higher multiplier, lower chance.
 // The realized RNG chance and the win-streak cap below are published in full at /fair-play.html,
@@ -16,6 +21,11 @@ const MAX_DEVICES_PER_SUBSCRIPTION = 3;
 const UPGRADE_MULTIPLIERS = { 2: 42, 5: 16, 12: 6 };
 const UPGRADE_REAL_CHANCE_FACTOR = 0.6;
 const UPGRADE_MAX_WIN_STREAK = 3;
+// Skin-targeting upgrade mode (stake days or a skin from your inventory at a specific, more
+// valuable skin instead of a fixed multiplier) - displayed chance is the plain stake/target value
+// ratio, clamped to this range; same UPGRADE_REAL_CHANCE_FACTOR discount and win-streak cap apply.
+const UPGRADE_SKIN_CHANCE_MIN = 1;
+const UPGRADE_SKIN_CHANCE_MAX = 85;
 
 function genUuid() {
   return crypto.randomUUID();
@@ -72,6 +82,19 @@ function grantDays(userId, days, plan) {
     'Устройство 1'
   );
   return db.prepare('SELECT * FROM subscriptions WHERE id = ?').get(info.lastInsertRowid);
+}
+
+/** Atomically deduct `days` from the user's active subscription (used to pay for a day-priced
+ * case or upgrade stake) - fails without changes if they don't have that many days left. Mirrors
+ * spendCoins's guarded-UPDATE pattern so a double-spend race can't leave expires_at negative. */
+function spendDays(userId, days) {
+  const info = db
+    .prepare(
+      `UPDATE subscriptions SET expires_at = datetime(expires_at, '-' || ? || ' days')
+       WHERE user_id = ? AND status = 'active' AND datetime(expires_at, '-' || ? || ' days') > datetime('now')`
+    )
+    .run(days, userId, days);
+  return info.changes > 0;
 }
 
 /** Up to MAX_DEVICES_PER_SUBSCRIPTION separate VLESS uuids per subscription, so one purchase can
@@ -181,6 +204,80 @@ function upgradeAttempt(userId, multiplier, stakeType, rawStakeAmount) {
   return { win, multiplier, chance: displayedChance, stakeType, stakeAmount, resultAmount, daysAfter, coinsAfter };
 }
 
+/** Skin-targeting upgrade: stake either days or a skin already sitting in the inventory, aiming
+ * at one specific (more valuable) skin instead of a fixed multiplier. Displayed chance is just
+ * the stake/target value ratio (clamped to [UPGRADE_SKIN_CHANCE_MIN, UPGRADE_SKIN_CHANCE_MAX]);
+ * the realized chance applies the same UPGRADE_REAL_CHANCE_FACTOR discount and win-streak cap as
+ * the multiplier mode (see /fair-play.html), plus a balance gate: a win that would pay out more
+ * than economy.getMaxPositivePayoutRub() above the stake never happens, however the dice land -
+ * that's what stops the site being forced to hand out a skin it can't afford. */
+function upgradeToSkin(userId, { stakeType, stakeAmount, stakeInventoryId, targetSkinId }) {
+  const target = skinsMod.getSkin(Number(targetSkinId));
+  if (!target || !target.available_for_upgrade) return { error: 'bad_target' };
+
+  let stakeValueRub;
+  let stakeDaysAmount = 0;
+  let stakeInvRow = null;
+  if (stakeType === 'days') {
+    const sub = activeSubscription(userId);
+    if (!sub) return { error: 'no_subscription' };
+    const available = daysUntil(sub.expires_at);
+    stakeDaysAmount = Math.round(Number(stakeAmount));
+    if (!Number.isFinite(stakeDaysAmount) || stakeDaysAmount < 1 || stakeDaysAmount > available) {
+      return { error: 'bad_stake_amount' };
+    }
+    stakeValueRub = stakeDaysAmount * economy.getConfig().dayPriceRub;
+  } else if (stakeType === 'skin') {
+    stakeInvRow = db
+      .prepare("SELECT * FROM user_inventory WHERE id = ? AND user_id = ? AND status = 'owned'")
+      .get(Number(stakeInventoryId), userId);
+    if (!stakeInvRow) return { error: 'bad_stake_skin' };
+    stakeValueRub = skinsMod.getSkin(stakeInvRow.skin_id)?.price_rub || 0;
+  } else {
+    return { error: 'bad_stake_type' };
+  }
+  if (!(target.price_rub > stakeValueRub)) return { error: 'target_not_higher' };
+
+  const rawChance = (stakeValueRub / target.price_rub) * 100;
+  const displayedChance = Math.min(UPGRADE_SKIN_CHANCE_MAX, Math.max(UPGRADE_SKIN_CHANCE_MIN, rawChance));
+  const forcedLoss = upgradeWinStreak(userId, UPGRADE_MAX_WIN_STREAK) >= UPGRADE_MAX_WIN_STREAK;
+  const netPayout = target.price_rub - stakeValueRub;
+  const balanceGated = netPayout > economy.getMaxPositivePayoutRub();
+  const realChance = displayedChance * UPGRADE_REAL_CHANCE_FACTOR;
+  const win = !forcedLoss && !balanceGated && Math.random() * 100 < realChance;
+
+  if (stakeType === 'days') {
+    if (!spendDays(userId, stakeDaysAmount)) return { error: 'bad_stake_amount' };
+  } else {
+    db.prepare("UPDATE user_inventory SET status = 'sold', updated_at = datetime('now') WHERE id = ?").run(stakeInvRow.id);
+  }
+
+  let wonInventoryId = null;
+  if (win) {
+    wonInventoryId = db
+      .prepare("INSERT INTO user_inventory (user_id, skin_id, source, price_rub_at_win) VALUES (?,?, 'upgrade', ?)")
+      .run(userId, target.id, target.price_rub).lastInsertRowid;
+  }
+  economy.applySpinResult(stakeValueRub, win ? target.price_rub : 0);
+
+  db.prepare(
+    `INSERT INTO upgrade_attempts
+       (user_id, multiplier, chance_percent, days_staked, success, days_after, stake_type, stake_amount, coins_after, stake_skin_id, target_skin_id)
+     VALUES (?,0,?,?,?,NULL,?,?,NULL,?,?)`
+  ).run(
+    userId,
+    Math.round(displayedChance),
+    stakeType === 'days' ? stakeDaysAmount : 0,
+    win ? 1 : 0,
+    stakeType,
+    stakeType === 'days' ? stakeDaysAmount : 0,
+    stakeInvRow ? stakeInvRow.skin_id : null,
+    target.id
+  );
+
+  return { win, chance: Math.round(displayedChance * 100) / 100, stakeType, targetSkin: target, wonInventoryId };
+}
+
 function startTrial(userId) {
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
   if (user.trial_used) return { error: 'used' };
@@ -226,19 +323,28 @@ function adjustCoins(userId, delta) {
 }
 
 /** Admin lookup: exact id match, or a username substring search. */
+/** No query - the most recently registered users (what the admin panel shows by default).
+ * Otherwise an exact id match or a username substring search. */
 function searchUsers(query) {
   const q = String(query || '').trim().replace(/^@/, '');
-  if (!q) return [];
-  const rows = /^\d+$/.test(q)
-    ? db.prepare('SELECT * FROM users WHERE id = ?').all(Number(q))
-    : db.prepare('SELECT * FROM users WHERE username LIKE ? ORDER BY created_at DESC LIMIT 25').all(`%${q}%`);
+  const rows = !q
+    ? db.prepare('SELECT * FROM users ORDER BY created_at DESC LIMIT 200').all()
+    : /^\d+$/.test(q)
+      ? db.prepare('SELECT * FROM users WHERE id = ?').all(Number(q))
+      : db.prepare('SELECT * FROM users WHERE username LIKE ? ORDER BY created_at DESC LIMIT 25').all(`%${q}%`);
   return rows.map((u) => ({
     id: u.id,
     username: u.username,
     coins: u.coins,
     trialUsed: !!u.trial_used,
+    createdAt: u.created_at,
     subscription: activeSubscription(u.id),
   }));
+}
+
+/** Total users ever registered (pressed /start at least once) - the admin overview headline. */
+function totalUsers() {
+  return db.prepare('SELECT COUNT(*) c FROM users').get().c;
 }
 
 /** Atomically deduct coins if the user has enough; returns false without changes otherwise. */
@@ -317,6 +423,29 @@ function completeGiftPurchase(payerUserId, planKey, amountRub) {
   return code;
 }
 
+/** Same as activatePaidPlan but for an arbitrary day count (priceForDays) instead of a fixed
+ * PLANS tier - no case-opening coins (those are tied to the fixed tiers), everything else the
+ * same: extends the payer's subscription, clears any pending promo discount, pays the referrer. */
+function activateCustomDays(userId, days, amountRub) {
+  const sub = grantDays(userId, days, 'custom_days');
+  creditPurchasePerks(userId, 'custom_days', amountRub);
+  return sub;
+}
+
+/** Same as completeGiftPurchase but for an arbitrary day count - redeemGiftCode already reads
+ * `days` generically off the gift_codes row, so no change needed there. */
+function completeGiftPurchaseDays(payerUserId, days, amountRub) {
+  creditPurchasePerks(payerUserId, 'custom_days', amountRub);
+  const code = crypto.randomBytes(6).toString('hex');
+  db.prepare('INSERT INTO gift_codes (code, plan, days, purchased_by) VALUES (?,?,?,?)').run(
+    code,
+    'custom_days',
+    days,
+    payerUserId
+  );
+  return code;
+}
+
 /** Redeem a gift code for whoever opens the link - one-time use. */
 function redeemGiftCode(code, userId) {
   const gift = db.prepare('SELECT * FROM gift_codes WHERE code = ?').get(code);
@@ -358,6 +487,19 @@ function recordReferralPayout(userId, amountRub) {
   return user.referral_earned_rub - user.referral_paid_rub;
 }
 
+/** Linear price for an arbitrary day count at the configurable per-day rate (site_config
+ * `day_price_rub`, default 2.5₽), with the same pending-promo-percent discount as priceForPlan. */
+function priceForDays(days, userId) {
+  const dayPriceRub = economy.getConfig().dayPriceRub;
+  const base = Math.round(days * dayPriceRub * 100) / 100;
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  if (user && user.promo_pending_percent) {
+    const discounted = Math.max(0.01, Math.round(((base * (100 - user.promo_pending_percent)) / 100) * 100) / 100);
+    return { amount: discounted, original: base, percent: user.promo_pending_percent };
+  }
+  return { amount: base, original: base, percent: 0 };
+}
+
 function priceForPlan(planKey, userId) {
   const plan = PLANS[planKey];
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
@@ -395,21 +537,29 @@ module.exports = {
   COINS_PER_PLAN,
   UPGRADE_MULTIPLIERS,
   MAX_DEVICES_PER_SUBSCRIPTION,
+  MAX_CUSTOM_DAYS,
+  UPGRADE_SKIN_CHANCE_MIN,
+  UPGRADE_SKIN_CHANCE_MAX,
   ensureUser,
   activeSubscription,
   grantDays,
+  spendDays,
   daysUntil,
   upgradeAttempt,
+  upgradeToSkin,
   startTrial,
   redeemPromo,
   activatePaidPlan,
+  activateCustomDays,
   priceForPlan,
+  priceForDays,
   activeClientUuids,
   listDevices,
   addDevice,
   removeDevice,
   subscriptionForDeviceUuid,
   sweepExpired,
+  totalUsers,
   addCoins,
   getCoins,
   spendCoins,
@@ -420,5 +570,6 @@ module.exports = {
   referralStats,
   recordReferralPayout,
   completeGiftPurchase,
+  completeGiftPurchaseDays,
   redeemGiftCode,
 };
