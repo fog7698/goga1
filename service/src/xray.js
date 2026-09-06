@@ -87,9 +87,14 @@ function formatExpiry(expiresAt) {
 /** `expiresAt` (SQLite `datetime('now')` string, UTC) is embedded as a read-only info entry
  * at the top of the location list so it shows inside Happ/INCY's own server picker. */
 function subscriptionBase64(uuid, expiresAt) {
-  const wsEntries = [...LOCATIONS, ...WHITELIST].map((n) => vlessLink(uuid, n));
-  const xhttpEntries = LTE_BYPASS.map((n) => vlessLink(uuid, n, 'xhttp'));
-  const entries = [...wsEntries, ...xhttpEntries];
+  // xhttp was tried here for the LTE-bypass entries specifically, since it seemed like a better
+  // fit for carriers whose DPI resets long-lived WS upgrades. In practice it didn't work at all,
+  // even over Wi-Fi with no carrier involved - Cloudflare's tunnel/proxy layer doesn't forward
+  // xhttp's streaming request/response semantics the way it does WS, so the transport itself
+  // never completed a working round trip through this Cloudflare Tunnel setup. Back to WS for
+  // every entry until a working alternative for carrier-level DPI is found.
+  const names = [...LOCATIONS, ...LTE_BYPASS, ...WHITELIST];
+  const entries = names.map((n) => vlessLink(uuid, n));
   const expiryLabel = formatExpiry(expiresAt);
   if (expiryLabel) entries.unshift(vlessLink(uuid, `⏳ Подписка активна до ${expiryLabel}`));
   return Buffer.from(entries.join('\n'), 'utf8').toString('base64');
