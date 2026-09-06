@@ -16,15 +16,31 @@ const OWNER_UUID = process.env.VPN_UUID;
 // fallback path, not used by vlessLink.
 const CF_HOST = process.env.CF_HOST || '';
 const CF_WS_PATH = process.env.CF_WS_PATH || '/xr-8f3a2b1c';
+const CF_XHTTP_PATH = process.env.CF_XHTTP_PATH || '/xh-4d9c1e7a';
 const VPN_HOST = process.env.VPN_HOST || '';
 const VPN_PORT = process.env.VPN_PORT || '443';
 const REALITY_PUBLIC_KEY = process.env.VPN_REALITY_PUBLIC_KEY || '';
 const REALITY_SHORT_ID = process.env.VPN_REALITY_SHORT_ID || '';
 const REALITY_SNI = process.env.VPN_REALITY_SNI || 'www.python.org';
 
-function vlessLink(uuid, remark) {
+function vlessLink(uuid, remark, transport = 'ws') {
   const r = encodeURIComponent(remark);
   if (CF_HOST) {
+    // xhttp rides plain HTTP/2 request/response semantics rather than a raw WebSocket upgrade,
+    // which blends in with ordinary browser traffic better - some mobile carriers' DPI flags and
+    // resets long-lived WS upgrades specifically, so xhttp is offered as the LTE-bypass transport.
+    if (transport === 'xhttp') {
+      const params = new URLSearchParams({
+        security: 'tls',
+        encryption: 'none',
+        type: 'xhttp',
+        path: CF_XHTTP_PATH,
+        host: CF_HOST,
+        sni: CF_HOST,
+        mode: 'auto',
+      });
+      return `vless://${uuid}@${CF_HOST}:443?${params.toString()}#${r}`;
+    }
     const params = new URLSearchParams({
       security: 'tls',
       encryption: 'none',
@@ -71,11 +87,12 @@ function formatExpiry(expiresAt) {
 /** `expiresAt` (SQLite `datetime('now')` string, UTC) is embedded as a read-only info entry
  * at the top of the location list so it shows inside Happ/INCY's own server picker. */
 function subscriptionBase64(uuid, expiresAt) {
-  const names = [...LOCATIONS, ...LTE_BYPASS, ...WHITELIST];
+  const wsEntries = [...LOCATIONS, ...WHITELIST].map((n) => vlessLink(uuid, n));
+  const xhttpEntries = LTE_BYPASS.map((n) => vlessLink(uuid, n, 'xhttp'));
+  const entries = [...wsEntries, ...xhttpEntries];
   const expiryLabel = formatExpiry(expiresAt);
-  if (expiryLabel) names.unshift(`⏳ Подписка активна до ${expiryLabel}`);
-  const body = names.map((n) => vlessLink(uuid, n)).join('\n');
-  return Buffer.from(body, 'utf8').toString('base64');
+  if (expiryLabel) entries.unshift(vlessLink(uuid, `⏳ Подписка активна до ${expiryLabel}`));
+  return Buffer.from(entries.join('\n'), 'utf8').toString('base64');
 }
 
 const COUNTRY_COUNT = new Set(
