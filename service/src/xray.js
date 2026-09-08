@@ -45,6 +45,9 @@ const REALITY_SNI = process.env.VPN_REALITY_SNI || 'www.python.org';
 function h1Link(index, remark) {
   const server = H1_SERVERS[index % H1_SERVERS.length];
   const r = encodeURIComponent(remark);
+  // No "flow" param here on purpose: the manually-provisioned 3x-ui clients this points at
+  // weren't set up with xtls-rprx-vision, and adding it to the link without the server side
+  // matching breaks the handshake instead of just being ignored.
   const params = new URLSearchParams({
     type: 'tcp',
     encryption: 'none',
@@ -54,7 +57,6 @@ function h1Link(index, remark) {
     sni: 'x5.ru',
     sid: server.sid,
     spx: server.spx,
-    flow: 'xtls-rprx-vision',
   });
   return `vless://${server.uuid}@${server.host}:${server.port}?${params.toString()}#${r}`;
 }
